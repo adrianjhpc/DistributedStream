@@ -59,7 +59,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	iloc.rank = prank;
 	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 	result->max = rloc.value;
-	printf("%d: %lf %d\n",prank, rloc.value, rloc.rank);
+	printf("%d %lf: %lf %d\n",prank, indivi.max, rloc.value, rloc.rank);
 	if(rloc.rank == prank && rloc.rank != root){
 		MPI_Ssend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
 	}else if(prank == root && rloc.rank != root){
