@@ -119,7 +119,6 @@
  *
  *-----------------------------------------------------------------------*/
 
-# define HLINE "-------------------------------------------------------------\n"
 
 # ifndef MIN
 # define MIN(x,y) ((x)<(y)?(x):(y))
@@ -170,13 +169,10 @@ int stream_memory_task(benchmark_results *b_results){
 
 	/* --- SETUP --- determine precision and check timing --- */
 
-	//printf(HLINE);
 	//printf("STREAM version $Revision: 5.10 $\n");
-	//printf(HLINE);
 	BytesPerWord = sizeof(STREAM_TYPE);
 	//printf("This system uses %d bytes per array element.\n",BytesPerWord);
 
-	//printf(HLINE);
 #ifdef N
 	//printf("*****  WARNING: ******\n");
 	//printf("      It appears that you set the preprocessor variable N when compiling this code.\n");
@@ -197,7 +193,6 @@ int stream_memory_task(benchmark_results *b_results){
 	//printf(" will be used to compute the reported bandwidth.\n");
 
 #ifdef _OPENMP
-	//printf(HLINE);
 #pragma omp parallel
 	{
 #pragma omp master
@@ -224,8 +219,6 @@ int stream_memory_task(benchmark_results *b_results){
 		c[j] = 0.0;
 	}
 
-	printf(HLINE);
-
 	//if  ( (quantum = checktick()) >= 1)
 	//	printf("Your clock granularity/precision appears to be "
 	//			"%d microseconds.\n", quantum);
@@ -247,12 +240,9 @@ int stream_memory_task(benchmark_results *b_results){
 	//printf("Increase the size of the arrays if this shows that\n");
 	//printf("you are not getting at least 20 clock ticks per test.\n");
 
-	//printf(HLINE);
-
 	//printf("WARNING -- The above is only a rough guideline.\n");
 	//printf("For best results, please be sure you know the\n");
 	//printf("precision of your system timer.\n");
-	//printf(HLINE);
 
 	/*	--- MAIN LOOP --- repeat test cases NTIMES times --- */
 
@@ -329,11 +319,9 @@ int stream_memory_task(benchmark_results *b_results){
 		//		avgtime[j],
 		//		mintime[j],
 		//		maxtime[j]);
-	//printf(HLINE);
 
 	/* --- Check Results --- */
 	checkSTREAMresults();
-	//printf(HLINE);
 
 	return 0;
 }
