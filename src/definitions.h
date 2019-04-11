@@ -14,7 +14,7 @@ typedef struct benchmark_results {
 	struct performance_result Add;
 	struct performance_result Triad;
 	char name[MPI_MAX_PROCESSOR_NAME];
-};
+} benchmark_results;
 
 typedef struct aggregate_results {
 	struct performance_result Copy;
@@ -25,8 +25,7 @@ typedef struct aggregate_results {
 	char scale_min[MPI_MAX_PROCESSOR_NAME];
 	char add_min[MPI_MAX_PROCESSOR_NAME];
 	char triad_min[MPI_MAX_PROCESSOR_NAME];
-
-};
+} aggregate_results;
 
 int stream(benchmark_results *b_result);
 void collect_results(benchmark_results result, benchmark_results *agg_result);
