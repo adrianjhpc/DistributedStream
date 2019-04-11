@@ -97,19 +97,20 @@ void print_results(aggregate_results a_results, int psize){
 		omp_thread_num = omp_get_num_threads();
 	}
 
-	printf("Running with %d MPI processes, each with %d OpenMP threads", psize, omp_thread_num);
+	printf("Running with %d MPI processes, each with %d OpenMP threads\n", psize, omp_thread_num);
+	printf("Benchmark:   Achieved Bandwidth:    Avg Time:   Min Time:  Max Time:")
 
 	total_data = (1.0E-06 * copy_size)/a_results.Copy.min;
-	printf("Copy results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results.Copy.avg, a_results.Copy.min, a_results.Copy.max);
+	printf("Copy: %12.1f:  %11.6f: %11.6f: %11.6f\n", total_data, a_results.Copy.avg, a_results.Copy.min, a_results.Copy.max);
 
 	total_data = (1.0E-06 * scale_size)/a_results.Copy.min;
-	printf("Scale results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
+	printf("Scale: %12.1f: %11.6f: %11.6f: %11.6f\n", total_data, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
 
 	total_data = (1.0E-06 * add_size)/a_results.Add.min;
-	printf("Add results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
+	printf("Add: %12.1f: %11.6f: %11.6f: %11.6f\n", total_data, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
 
 	total_data = (1.0E-06 * triad_size)/a_results.Triad.min;
-	printf("Triad results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
+	printf("Triad: %12.1f: %11.6f: %11.6f: %11.6f\n", total_data, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
 
 
 }
