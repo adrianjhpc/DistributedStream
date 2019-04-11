@@ -6,7 +6,7 @@ typedef struct performance_result {
    double avg;
    double min;
    double max;
-};
+} performance_result;
 
 typedef struct benchmark_results {
 	struct performance_result Copy;
