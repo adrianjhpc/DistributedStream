@@ -102,19 +102,33 @@ void print_results(aggregate_results a_results, int psize){
 	printf("                  (GB/s)         (seconds)       (GB/s)      (seconds)       (GB/s)      (seconds)\n");
 	printf("--------------------------------------------------------------------------------------------------\n");
 
+	// Calculate the bandwidths. Max bandwidth is achieved using the min time (i.e. the fast time). This is
+	// why max and min are opposite either side of the "=" below
 	bandwidth_avg = (1.0E-06 * copy_size)/a_results.Copy.avg;
 	bandwidth_max = (1.0E-06 * copy_size)/a_results.Copy.min;
 	bandwidth_min = (1.0E-06 * copy_size)/a_results.Copy.max;
 	printf("Copy:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f\n", bandwidth_avg, a_results.Copy.avg, bandwidth_max, a_results.Copy.min, bandwidth_min, a_results.Copy.max);
 
-	bandwidth_avg = (1.0E-06 * scale_size)/a_results.Copy.avg;
-	printf("Scale: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_avg, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
+	// Calculate the bandwidths. Max bandwidth is achieved using the min time (i.e. the fast time). This is
+	// why max and min are opposite either side of the "=" below
+	bandwidth_avg = (1.0E-06 * scale_size)/a_results.Scale.avg;
+	bandwidth_max = (1.0E-06 * scale_size)/a_results.Scale.min;
+	bandwidth_min = (1.0E-06 * scale_size)/a_results.Scale.max;
+	printf("Scale:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f\n", bandwidth_avg, a_results.Scale.avg, bandwidth_max, a_results.Scale.min, bandwidth_min, a_results.Scale.max);
 
+	// Calculate the bandwidths. Max bandwidth is achieved using the min time (i.e. the fast time). This is
+	// why max and min are opposite either side of the "=" below
 	bandwidth_avg = (1.0E-06 * add_size)/a_results.Add.avg;
-	printf("Add:   %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_avg, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
+	bandwidth_max = (1.0E-06 * add_size)/a_results.Add.min;
+	bandwidth_min = (1.0E-06 * add_size)/a_results.Add.max;
+	printf("Add:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f\n", bandwidth_avg, a_results.Add.avg, bandwidth_max, a_results.Add.min, bandwidth_min, a_results.Add.max);
 
+	// Calculate the bandwidths. Max bandwidth is achieved using the min time (i.e. the fast time). This is
+	// why max and min are opposite either side of the "=" below
 	bandwidth_avg = (1.0E-06 * triad_size)/a_results.Triad.avg;
-	printf("Triad: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_avg, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
+	bandwidth_max = (1.0E-06 * triad_size)/a_results.Triad.min;
+	bandwidth_min = (1.0E-06 * triad_size)/a_results.Triad.max;
+	printf("Triad:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f\n", bandwidth_avg, a_results.Triad.avg, bandwidth_max, a_results.Triad.min, bandwidth_min, a_results.Triad.max);
 
 
 }
