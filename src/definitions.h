@@ -5,12 +5,26 @@
 #include <limits.h>
 #include <float.h>
 
+
+#ifndef STREAM_TYPE
+#define STREAM_TYPE double
+#endif
+
+# ifndef MIN
+# define MIN(x,y) ((x)<(y)?(x):(y))
+# endif
+# ifndef MAX
+# define MAX(x,y) ((x)>(y)?(x):(y))
+# endif
+
+
+
 #define ROOT 0
 
 typedef struct performance_result {
-   double avg;
-   double min;
-   double max;
+	double avg;
+	double min;
+	double max;
 } performance_result;
 
 typedef struct benchmark_results {

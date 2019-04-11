@@ -120,16 +120,6 @@
  *-----------------------------------------------------------------------*/
 
 
-# ifndef MIN
-# define MIN(x,y) ((x)<(y)?(x):(y))
-# endif
-# ifndef MAX
-# define MAX(x,y) ((x)>(y)?(x):(y))
-# endif
-
-#ifndef STREAM_TYPE
-#define STREAM_TYPE double
-#endif
 
 static STREAM_TYPE	a[STREAM_ARRAY_SIZE+OFFSET],
 b[STREAM_ARRAY_SIZE+OFFSET],
@@ -307,11 +297,11 @@ int stream_memory_task(benchmark_results *b_results){
 	b_results->Triad.avg = b_results->Triad.avg/(double)(NTIMES-1);
 
 
-		//printf("%s%12.1f  %11.6f  %11.6f  %11.6f\n", label[j],
-		//		1.0E-06 * bytes[j]/mintime[j],
-		//		avgtime[j],
-		//		mintime[j],
-		//		maxtime[j]);
+	//printf("%s%12.1f  %11.6f  %11.6f  %11.6f\n", label[j],
+	//		1.0E-06 * bytes[j]/mintime[j],
+	//		avgtime[j],
+	//		mintime[j],
+	//		maxtime[j]);
 
 	/* --- Check Results --- */
 	checkSTREAMresults();

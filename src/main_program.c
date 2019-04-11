@@ -98,7 +98,7 @@ void print_results(aggregate_results a_results, int psize){
 
 	printf("Running with %d MPI processes, each with %d OpenMP threads", psize, omp_thread_num);
 
-	total_data = (1.0E-06 * copy_size)/a_results->Copy.min;
+	total_data = (1.0E-06 * copy_size)/a_results.Copy.min;
 	printf("Copy results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results.Copy.avg, a_results.Copy.min, a_results.Copy.max);
 
 	total_data = (1.0E-06 * scale_size)/a_results.Copy.min;
