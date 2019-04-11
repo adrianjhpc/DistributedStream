@@ -32,18 +32,18 @@ void collect_results(benchmark_results b_results, aggregate_results *a_results){
 // Initialise the benchmark results structure to enable proper collection of data
 void initialise_benchmark_results(benchmark_results *b_results){
 
-	*b_results.Copy.avg = 0;
-	*b_results.Copy.min = FLT_MAX;
-	*b_results.Copy.max= 0;
-	*b_results.Scale.avg = 0;
-	*b_results.Scale.min = FLT_MAX;
-	*b_results.Scale.max= 0;
-	*b_results.Add.avg = 0;
-	*b_results.Add.min = FLT_MAX;
-	*b_results.Add.max= 0;
-	*b_results.Triad.avg = 0;
-	*b_results.Triad.min = FLT_MAX;
-	*b_results.Triad.max= 0;
+	b_results->Copy.avg = 0;
+	b_results->Copy.min = FLT_MAX;
+	b_results->Copy.max= 0;
+	b_results->Scale.avg = 0;
+	b_results->Scale.min = FLT_MAX;
+	b_results->Scale.max= 0;
+	b_results->Add.avg = 0;
+	b_results->Add.min = FLT_MAX;
+	b_results->Add.max= 0;
+	b_results->Triad.avg = 0;
+	b_results->Triad.min = FLT_MAX;
+	b_results->Triad.max= 0;
 
 	MPI_Get_processor_name(&b_results.name, &name_length);
 

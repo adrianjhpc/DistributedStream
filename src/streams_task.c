@@ -305,25 +305,25 @@ int stream(benchmark_results *b_results){
 	/*	--- SUMMARY --- */
 	/* note -- skip first iteration */
 	for (k=1; k<NTIMES; k++) {
-		*b_results.Copy.avg = *b_results.Copy.avg + times[0][k];
-		*b_results.Copy.min = MIN(*b_results.Copy.avg, times[0][k]);
-		*b_results.Copy.max = MAX(*b_results.Copy.avg, times[0][k]);
-		*b_results.Scale.avg = *b_results.Scale.avg + times[1][k];
-		*b_results.Scale.min = MIN(*b_results.Scale.avg, times[1][k]);
-		*b_results.Scale.max = MAX(*b_results.Scale.avg, times[1][k]);
-		*b_results.Add.avg = *b_results.Add.avg + times[2][k];
-		*b_results.Add.min = MIN(*b_results.Add.avg, times[2][k]);
-		*b_results.Add.max = MAX(*b_results.Add.avg, times[2][k]);
-		*b_results.Triad.avg = *b_results.Triad.avg + times[3][k];
-		*b_results.Triad.min = MIN(*b_results.Triad.avg, times[3][k]);
-		*b_results.Triad.max = MAX(*b_results.Triad.avg, times[3][k]);
+		b_results->Copy.avg = b_results->Copy.avg + times[0][k];
+		b_results->Copy.min = MIN(b_results->Copy.avg, times[0][k]);
+		b_results->Copy.max = MAX(b_results->Copy.avg, times[0][k]);
+		b_results->Scale.avg = b_results->Scale.avg + times[1][k];
+		b_results->Scale.min = MIN(b_results->Scale.avg, times[1][k]);
+		b_results->Scale.max = MAX(b_results->Scale.avg, times[1][k]);
+		b_results->Add.avg = b_results->Add.avg + times[2][k];
+		b_results->Add.min = MIN(b_results->Add.avg, times[2][k]);
+		b_results->Add.max = MAX(b_results->Add.avg, times[2][k]);
+		b_results->Triad.avg = b_results->Triad.avg + times[3][k];
+		b_results->Triad.min = MIN(b_results->Triad.avg, times[3][k]);
+		b_results->Triad.max = MAX(b_results->Triad.avg, times[3][k]);
 	}
 
 	//printf("Function    Best Rate MB/s  Avg time     Min time     Max time\n");
-	*b_results.Copy.avg = *b_results.Copy.avg/(double)(NTIMES-1);
-	*b_results.Scale.avg = *b_results.Scale.avg/(double)(NTIMES-1);
-	*b_results.Add.avg = *b_results.Add.avg/(double)(NTIMES-1);
-	*b_results.Triad.avg = *b_results.Triad.avg/(double)(NTIMES-1);
+	b_results->Copy.avg = b_results->Copy.avg/(double)(NTIMES-1);
+	b_results->Scale.avg = b_results->Scale.avg/(double)(NTIMES-1);
+	b_results->Add.avg = b_results->Add.avg/(double)(NTIMES-1);
+	b_results->Triad.avg = b_results->Triad.avg/(double)(NTIMES-1);
 
 
 		//printf("%s%12.1f  %11.6f  %11.6f  %11.6f\n", label[j],
