@@ -85,7 +85,7 @@ void initialise_benchmark_results(benchmark_results *b_results){
 void print_results(aggregate_results a_results, int psize){
 
 	int omp_thread_num;
-	double bandwidth_av, bandwidth_max, bandwidth_min;
+	double bandwidth_avg, bandwidth_max, bandwidth_min;
 	double copy_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
 	double scale_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
 	double add_size	= 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
@@ -107,14 +107,14 @@ void print_results(aggregate_results a_results, int psize){
 	bandwidth_min = (1.0E-06 * copy_size)/a_results.Copy.max;
 	printf("Copy:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f\n", bandwidth_av, a_results.Copy.avg, bandwidth_max, a_results.Copy.min, bandwidth_min, a_results.Copy.max);
 
-	bandwidth_av = (1.0E-06 * scale_size)/a_results.Copy.avg;
-	printf("Scale: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", total_data, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
+	bandwidth_avg = (1.0E-06 * scale_size)/a_results.Copy.avg;
+	printf("Scale: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_avg, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
 
-	bandwidth_av = (1.0E-06 * add_size)/a_results.Add.avg;
-	printf("Add:   %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_av, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
+	bandwidth_avg = (1.0E-06 * add_size)/a_results.Add.avg;
+	printf("Add:   %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_avg, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
 
-	bandwidth_av = (1.0E-06 * triad_size)/a_results.Triad.avg;
-	printf("Triad: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_av, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
+	bandwidth_avg = (1.0E-06 * triad_size)/a_results.Triad.avg;
+	printf("Triad: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_avg, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
 
 
 }
