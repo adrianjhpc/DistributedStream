@@ -13,9 +13,10 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results);
 
-#pragma omp parallel default(shared) private(omp_thread_num){
-	printf("MPI Rank: %d OpenMP Thread: %d Name %s\n", prank, omp_thread_num, b_results.name);
-}
+#pragma omp parallel default(shared) private(omp_thread_num)
+	{
+		printf("MPI Rank: %d OpenMP Thread: %d Name %s\n", prank, omp_thread_num, b_results.name);
+	}
 
 	//stream_task(&b_results);
 	//collect_results(b_results, &a_results);
