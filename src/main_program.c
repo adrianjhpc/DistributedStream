@@ -85,10 +85,11 @@ void initialise_benchmark_results(benchmark_results *b_results){
 void print_results(aggregate_results a_results, int psize){
 
 	int omp_thread_num;
+	double total_data;
 	double copy_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
 	double scale_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
 	double add_size	= 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
-	double triadd_size = 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
+	double triad_size = 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
 
 
 #pragma omp parallel default(shared)
