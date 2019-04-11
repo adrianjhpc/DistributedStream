@@ -26,10 +26,10 @@ int main(int argc, char **argv){
 
 void collect_results(benchmark_results b_results, aggregate_results *a_results, int psize, int prank){
 
-	collect_individual_result(b_results.Copy, &a_results->Copy, &a_results->copy_max, psize, prank, b_results.name);
-	collect_individual_result(b_results.Scale, &a_results->Scale, &a_results->scale_max, psize, prank, b_results.name);
-	collect_individual_result(b_results.Add, &a_results->Add, &a_results->add_max, psize, prank, b_results.name);
-	collect_individual_result(b_results.Triad, &a_results->Triad, &a_results->triad_max, psize, prank. b_results.name);
+	collect_individual_result(b_results.Copy, &a_results->Copy, a_results->copy_max, psize, prank, b_results.name);
+	collect_individual_result(b_results.Scale, &a_results->Scale, a_results->scale_max, psize, prank, b_results.name);
+	collect_individual_result(b_results.Add, &a_results->Add, a_results->add_max, psize, prank, b_results.name);
+	collect_individual_result(b_results.Triad, &a_results->Triad, a_results->triad_max, psize, prank. b_results.name);
 
 }
 
