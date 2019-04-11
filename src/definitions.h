@@ -3,16 +3,16 @@
 #include <stdlib.h>
 
 struct performance_result {
-   double avg = {0};
-   double min = {FLT_MAX};
-   double max = {0};
+   double avg;
+   double min;
+   double max;
 };
 
 struct benchmark_results {
-	struct performance_result Copy;
-	struct performance_result Scale;
-	struct performance_result Add;
-	struct performance_result Triad;
+	struct performance_result Copy = {0, FLT_MAX, 0};
+	struct performance_result Scale = {0, FLT_MAX, 0};
+	struct performance_result Add = {0, FLT_MAX, 0};
+	struct performance_result Triad = {0, FLT_MAX, 0};
 	char name[MPI_MAX_PROCESSOR_NAME];
 };
 
