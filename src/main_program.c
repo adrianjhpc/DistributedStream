@@ -101,16 +101,16 @@ void print_results(aggregate_results a_results, int psize){
 	printf("Benchmark:   Achieved Bandwidth:    Avg Time:   Min Time:  Max Time:\n");
 
 	total_data = (1.0E-06 * copy_size)/a_results.Copy.min;
-	printf("Copy: %12.1f:  %11.6f: %11.6f: %11.6f\n", total_data, a_results.Copy.avg, a_results.Copy.min, a_results.Copy.max);
+	printf("Copy:  %12.1f:   %11.6f:   %11.6f:   %11.6f\n", total_data, a_results.Copy.avg, a_results.Copy.min, a_results.Copy.max);
 
 	total_data = (1.0E-06 * scale_size)/a_results.Copy.min;
-	printf("Scale: %12.1f: %11.6f: %11.6f: %11.6f\n", total_data, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
+	printf("Scale: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", total_data, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
 
 	total_data = (1.0E-06 * add_size)/a_results.Add.min;
-	printf("Add: %12.1f: %11.6f: %11.6f: %11.6f\n", total_data, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
+	printf("Add:   %12.1f:   %11.6f:   %11.6f:   %11.6f\n", total_data, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
 
 	total_data = (1.0E-06 * triad_size)/a_results.Triad.min;
-	printf("Triad: %12.1f: %11.6f: %11.6f: %11.6f\n", total_data, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
+	printf("Triad: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", total_data, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
 
 
 }
