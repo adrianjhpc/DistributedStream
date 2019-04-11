@@ -461,9 +461,7 @@ void checkSTREAMresults (){
 		}
 		printf("     For array c[], %d errors were found.\n",ierr);
 	}
-	if (err == 0) {
-		printf ("Solution Validates: avg error less than %e on all three arrays\n",epsilon);
-	}
+
 #ifdef VERBOSE
 	printf ("Results Validation Verbose Results: \n");
 	printf ("    Expected a(1), b(1), c(1): %f %f %f \n",aj,bj,cj);
