@@ -28,10 +28,10 @@ int main(int argc, char **argv){
 
 void collect_results(benchmark_results b_results, aggregate_results *a_results, int psize, int prank){
 
-	collect_individual_result(b_results.Copy, a_results->Copy, psize, prank);
-	collect_individual_result(b_results.Scale, a_results->Scale, psize, prank);
-	collect_individual_result(b_results.Add, a_results->Add, psize, prank);
-	collect_individual_result(b_results.Triad, a_results->Triad, psize, prank);
+	collect_individual_result(b_results.Copy, &a_results->Copy, psize, prank);
+	collect_individual_result(b_results.Scale, &a_results->Scale, psize, prank);
+	collect_individual_result(b_results.Add, &a_results->Add, psize, prank);
+	collect_individual_result(b_results.Triad, &a_results->Triad, psize, prank);
 
 
 
@@ -49,13 +49,13 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
 	int root = 0;
 
-	MPI_Reduce(indivi.avg, result->avg, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+	MPI_Reduce(&indivi.avg, &result->avg, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
 	if(prank == root){
 		result->avg = result->avg/psize;
 	}
-	MPI_Reduce(indivi.max, rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, root, MPI_COMM_WORLD);
+	MPI_Reduce(&indivi.max, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, root, MPI_COMM_WORLD);
 	result->max = rloc.value;
-	MPI_Reduce(indivi.min, rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, root, MPI_COMM_WORLD);
+	MPI_Reduce(&indivi.min, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, root, MPI_COMM_WORLD);
 	result->min = rloc.value;
 
 }
