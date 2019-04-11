@@ -3,9 +3,9 @@
 #include <stdlib.h>
 
 struct performance_result {
-   double avg = 0;
-   double min = FLT_MAX;
-   double max = 0;
+   double avg = {0};
+   double min = {FLT_MAX};
+   double max = {0};
 };
 
 struct benchmark_results {
