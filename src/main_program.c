@@ -53,7 +53,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	MPI_Allreduce(&indivi.max, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 	result->max = rloc.value;
 	if(rloc.rank == prank && rloc.rank != root){
-		MPI_SSend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
+		MPI_Ssend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
 	}else if(prank == root && rloc.rank != root){
 		MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0, MPI_COMM_WORLD, &status);
 	}else if(rloc.rank == root){
