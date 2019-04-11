@@ -9,10 +9,10 @@ struct performance_result {
 };
 
 struct benchmark_results {
-	struct performance_result Copy = {0, FLT_MAX, 0};
-	struct performance_result Scale = {0, FLT_MAX, 0};
-	struct performance_result Add = {0, FLT_MAX, 0};
-	struct performance_result Triad = {0, FLT_MAX, 0};
+	struct performance_result Copy;
+	struct performance_result Scale;
+	struct performance_result Add;
+	struct performance_result Triad;
 	char name[MPI_MAX_PROCESSOR_NAME];
 };
 
