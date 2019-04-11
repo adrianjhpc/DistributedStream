@@ -35,13 +35,18 @@ void collect_results(benchmark_results b_results, aggregate_results *a_results, 
 
 void collect_individual_result(performance_result indivi, performance_result *result, char *max_name, int psize, int prank, char *name){
 
-
+	// Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
+	// This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
+	// matches this specification.
     typedef struct resultloc {
         double value;
         int   rank;
     } resultloc;
 
+    // Variable for the result of the reduction
     resultloc rloc;
+    // Variable for the data to be reduced
+    resultloc iloc;
 
 	int root = ROOT;
 	MPI_Status status;
@@ -50,9 +55,11 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	if(prank == root){
 		result->avg = result->avg/psize;
 	}
-	MPI_Allreduce(&indivi.max, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
+	iloc.value = indivi.max;
+	iloc.rank = prank;
+	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 	result->max = rloc.value;
-	printf("%lf %d",rloc.value, rloc.rank);
+	printf("%d: %lf %d\n",prank, rloc.value, rloc.rank);
 	if(rloc.rank == prank && rloc.rank != root){
 		MPI_Ssend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
 	}else if(prank == root && rloc.rank != root){
@@ -60,7 +67,9 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	}else if(rloc.rank == root){
 		max_name = name;
 	}
-	MPI_Allreduce(&indivi.min, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, MPI_COMM_WORLD);
+	iloc.value = indivi.min;
+	iloc.rank = prank;
+	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, MPI_COMM_WORLD);
 	result->min = rloc.value;
 
 }
