@@ -1,7 +1,6 @@
 #include "definitions.h"
 #include <unistd.h>
 #include <math.h>
-#include <float.h>
 #include <sys/time.h>
 
 /*-----------------------------------------------------------------------
