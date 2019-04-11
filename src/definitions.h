@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <float.h>
 
+#define ROOT 0
 
 typedef struct performance_result {
    double avg;
@@ -35,4 +36,4 @@ int stream_memory_task(benchmark_results *b_results);
 void collect_results(benchmark_results result, aggregate_results *agg_result, int psize, int prank);
 void initialise_benchmark_results(benchmark_results *b_results);
 void collect_individual_result(performance_result indivi, performance_result *result, int psize, int prank);
-
+void print_results(aggregate_results a_results, int psize);

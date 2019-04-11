@@ -139,13 +139,6 @@ c[STREAM_ARRAY_SIZE+OFFSET];
 static char	*label[4] = {"Copy:      ", "Scale:     ",
 		"Add:       ", "Triad:     "};
 
-static double	bytes[4] = {
-		2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE,
-		2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE,
-		3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE,
-		3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE
-};
-
 double mysecond();
 void checkSTREAMresults();
 

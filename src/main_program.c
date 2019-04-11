@@ -13,14 +13,12 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results);
 
-#pragma omp parallel default(shared) private(omp_thread_num)
-	{
-		omp_thread_num = omp_get_thread_num();
-		printf("MPI Rank: %d OpenMP Thread: %d Name %s\n", prank, omp_thread_num, b_results.name);
-	}
-
 	stream_memory_task(&b_results);
 	collect_results(b_results, &a_results, psize, prank);
+
+	if(prank == ROOT){
+		print_results(a_results, psize);
+	}
 
 	MPI_Finalize();
 
@@ -32,8 +30,6 @@ void collect_results(benchmark_results b_results, aggregate_results *a_results, 
 	collect_individual_result(b_results.Scale, &a_results->Scale, psize, prank);
 	collect_individual_result(b_results.Add, &a_results->Add, psize, prank);
 	collect_individual_result(b_results.Triad, &a_results->Triad, psize, prank);
-
-
 
 }
 
@@ -47,7 +43,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
     resultloc rloc;
 
-	int root = 0;
+	int root = ROOT;
 
 	MPI_Reduce(&indivi.avg, &result->avg, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
 	if(prank == root){
@@ -79,5 +75,40 @@ void initialise_benchmark_results(benchmark_results *b_results){
 	b_results->Triad.max= 0;
 
 	MPI_Get_processor_name(b_results->name, &name_length);
+
+}
+
+// Print out aggregate results. The intention is that this will only
+// be called from the root process as the overall design is that
+// only the root process (the process which has ROOT rank) will
+// have this data.
+void print_results(aggregate_results a_results, int psize){
+
+	int omp_thread_num;
+	double copy_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
+	double scale_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
+	double add_size	= 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
+	double triadd_size = 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
+
+
+#pragma omp parallel default(shared)
+	{
+		omp_thread_num = omp_get_num_threads();
+	}
+
+	printf("Running with %d MPI processes, each with %d OpenMP threads", psize, omp_thread_num);
+
+	total_data = (1.0E-06 * copy_size)/a_results->Copy.min;
+	printf("Copy results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results->Copy.avg, a_results->Copy.min, a_results->Copy.max);
+
+	total_data = (1.0E-06 * scale_size)/a_results->Copy.min;
+	printf("Scale results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results->Scale.avg, a_results->Scale.min, a_results->Scale.max);
+
+	total_data = (1.0E-06 * add_size)/a_results->Add.min;
+	printf("Add results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results->Add.avg, a_results->Add.min, a_results->Add.max);
+
+	total_data = (1.0E-06 * triad_size)/a_results->Triad.min;
+	printf("Triad results Achieved Bandwidth: %12.1f  Avg Time: %11.6f Min Time: %11.6f Max time: %11.6f", total_data, a_results->Triad.avg, a_results->Triad.min, a_results->Triad.max);
+
 
 }
