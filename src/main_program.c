@@ -4,8 +4,8 @@ int main(int argc, char **argv){
 
 	int prank, psize, name_length;
 	int omp_thread_num;
-	struct benchmark_results b_results;
-	struct aggregate_results a_results;
+	benchmark_results b_results;
+	aggregate_results a_results;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &psize);
@@ -24,13 +24,13 @@ int main(int argc, char **argv){
 
 }
 
-void collect_results(struct benchmark_results b_results, struct aggregate_results *a_results){
+void collect_results(benchmark_results b_results, aggregate_results *a_results){
 
 
 }
 
 // Initialise the benchmark results structure to enable proper collection of data
-void initialise_benchmark_results(struct benchmark_results *b_results){
+void initialise_benchmark_results(benchmark_results *b_results){
 
 	*b_results.Copy.avg = 0;
 	*b_results.Copy.min = FLT_MAX;
@@ -46,6 +46,5 @@ void initialise_benchmark_results(struct benchmark_results *b_results){
 	*b_results.Triad.max= 0;
 
 	MPI_Get_processor_name(&b_results.name, &name_length);
-
 
 }

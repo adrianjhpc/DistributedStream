@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct performance_result {
+typedef struct performance_result {
    double avg;
    double min;
    double max;
 };
 
-struct benchmark_results {
+typedef struct benchmark_results {
 	struct performance_result Copy;
 	struct performance_result Scale;
 	struct performance_result Add;
@@ -16,7 +16,7 @@ struct benchmark_results {
 	char name[MPI_MAX_PROCESSOR_NAME];
 };
 
-struct aggregate_results {
+typedef struct aggregate_results {
 	struct performance_result Copy;
 	struct performance_result Scale;
 	struct performance_result Add;
@@ -28,5 +28,5 @@ struct aggregate_results {
 
 };
 
-int stream(struct benchmark_results *b_result);
-void collect_results(struct benchmark_results result, struct benchmark_results *agg_result);
+int stream(benchmark_results *b_result);
+void collect_results(benchmark_results result, benchmark_results *agg_result);
