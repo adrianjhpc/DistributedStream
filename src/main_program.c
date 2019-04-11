@@ -15,6 +15,7 @@ int main(int argc, char **argv){
 
 #pragma omp parallel default(shared) private(omp_thread_num)
 	{
+		omp_thread_num = omp_get_thread_num();
 		printf("MPI Rank: %d OpenMP Thread: %d Name %s\n", prank, omp_thread_num, b_results.name);
 	}
 

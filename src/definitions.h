@@ -1,8 +1,10 @@
 #include <mpi.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
+
 
 typedef struct performance_result {
    double avg;
