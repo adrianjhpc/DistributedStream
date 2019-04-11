@@ -32,6 +32,7 @@ typedef struct aggregate_results {
 } aggregate_results;
 
 int stream_memory_task(benchmark_results *b_results);
-void collect_results(benchmark_results result, aggregate_results *agg_result);
+void collect_results(benchmark_results result, aggregate_results *agg_result, int psize, int prank);
 void initialise_benchmark_results(benchmark_results *b_results);
+void collect_individual_result(performance_result indivi, performance_result *result, int psize, int prank);
 
