@@ -31,7 +31,7 @@ typedef struct aggregate_results {
 	char triad_min[MPI_MAX_PROCESSOR_NAME];
 } aggregate_results;
 
-int stream(benchmark_results *b_result);
+int stream_memory_task(benchmark_results *b_results);
 void collect_results(benchmark_results result, aggregate_results *agg_result);
 void initialise_benchmark_results(benchmark_results *b_results);
 

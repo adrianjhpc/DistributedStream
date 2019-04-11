@@ -160,7 +160,7 @@ extern void tuned_STREAM_Triad(STREAM_TYPE scalar);
 extern int omp_get_num_threads();
 #endif
 
-int stream(benchmark_results *b_results){
+int stream_memory_task(benchmark_results *b_results){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
