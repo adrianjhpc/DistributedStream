@@ -29,7 +29,7 @@ void collect_results(benchmark_results b_results, aggregate_results *a_results, 
 	collect_individual_result(b_results.Copy, &a_results->Copy, a_results->copy_max, psize, prank, b_results.name);
 	collect_individual_result(b_results.Scale, &a_results->Scale, a_results->scale_max, psize, prank, b_results.name);
 	collect_individual_result(b_results.Add, &a_results->Add, a_results->add_max, psize, prank, b_results.name);
-	collect_individual_result(b_results.Triad, &a_results->Triad, a_results->triad_max, psize, prank. b_results.name);
+	collect_individual_result(b_results.Triad, &a_results->Triad, a_results->triad_max, psize, prank, b_results.name);
 
 }
 
@@ -55,7 +55,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	if(rloc.rank == prank && rloc.rank != root){
 		MPI_SSend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
 	}else if(prank == root && rloc.rank != root){
-		MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0 MPI_COMM_WORLD, &status);
+		MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0, MPI_COMM_WORLD, &status);
 	}else if(rloc.rank == root){
 		max_name = name;
 	}
