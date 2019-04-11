@@ -102,7 +102,7 @@ void print_results(aggregate_results a_results, int psize){
 	printf("                  (GB/s)         (seconds)       (GB/s)      (seconds)       (GB/s)      (seconds)\n");
 	printf("--------------------------------------------------------------------------------------------------\n");
 
-	bandwidth_av = (1.0E-06 * copy_size)/a_results.Copy.avg;
+	bandwidth_avg = (1.0E-06 * copy_size)/a_results.Copy.avg;
 	bandwidth_max = (1.0E-06 * copy_size)/a_results.Copy.min;
 	bandwidth_min = (1.0E-06 * copy_size)/a_results.Copy.max;
 	printf("Copy:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f\n", bandwidth_av, a_results.Copy.avg, bandwidth_max, a_results.Copy.min, bandwidth_min, a_results.Copy.max);
