@@ -38,15 +38,15 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	// Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
 	// This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
 	// matches this specification.
-    typedef struct resultloc {
-        double value;
-        int   rank;
-    } resultloc;
+	typedef struct resultloc {
+		double value;
+		int   rank;
+	} resultloc;
 
-    // Variable for the result of the reduction
-    resultloc rloc;
-    // Variable for the data to be reduced
-    resultloc iloc;
+	// Variable for the result of the reduction
+	resultloc rloc;
+	// Variable for the data to be reduced
+	resultloc iloc;
 
 	int root = ROOT;
 	MPI_Status status;
@@ -67,7 +67,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	}else if(prank == root && rloc.rank != root){
 		MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0, MPI_COMM_WORLD, &status);
 	}else if(rloc.rank == root){
-		max_name = name;
+		strcpy(max_name, name);
 	}
 	iloc.value = indivi.min;
 	iloc.rank = prank;
