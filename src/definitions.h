@@ -29,3 +29,5 @@ typedef struct aggregate_results {
 
 int stream(benchmark_results *b_result);
 void collect_results(benchmark_results result, benchmark_results *agg_result);
+void initialise_benchmark_results(benchmark_results *b_results);
+
