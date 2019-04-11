@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv){
 
-	int prank, psize, name_length;
+	int prank, psize;
 	int omp_thread_num;
 	benchmark_results b_results;
 	aggregate_results a_results;
@@ -32,6 +32,8 @@ void collect_results(benchmark_results b_results, aggregate_results *a_results){
 
 // Initialise the benchmark results structure to enable proper collection of data
 void initialise_benchmark_results(benchmark_results *b_results){
+
+	int name_length;
 
 	b_results->Copy.avg = 0;
 	b_results->Copy.min = FLT_MAX;
