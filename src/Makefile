@@ -1,4 +1,4 @@
-SRCMPI	= streams_task.c main_program.c 
+SRCMPI	= streams_memory_task.c main_program.c 
 
 OBJMPI	=$(SRCMPI:.c=.o)
 
