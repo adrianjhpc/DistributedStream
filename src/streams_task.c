@@ -331,7 +331,6 @@ int stream(benchmark_results *b_results){
 		//		avgtime[j],
 		//		mintime[j],
 		//		maxtime[j]);
-	}
 	//printf(HLINE);
 
 	/* --- Check Results --- */
