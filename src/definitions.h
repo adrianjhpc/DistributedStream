@@ -40,14 +40,14 @@ typedef struct aggregate_results {
 	struct performance_result Scale;
 	struct performance_result Add;
 	struct performance_result Triad;
-	char copy_min[MPI_MAX_PROCESSOR_NAME];
-	char scale_min[MPI_MAX_PROCESSOR_NAME];
-	char add_min[MPI_MAX_PROCESSOR_NAME];
-	char triad_min[MPI_MAX_PROCESSOR_NAME];
+	char copy_max[MPI_MAX_PROCESSOR_NAME];
+	char scale_max[MPI_MAX_PROCESSOR_NAME];
+	char add_max[MPI_MAX_PROCESSOR_NAME];
+	char triad_max[MPI_MAX_PROCESSOR_NAME];
 } aggregate_results;
 
 int stream_memory_task(benchmark_results *b_results);
 void collect_results(benchmark_results result, aggregate_results *agg_result, int psize, int prank);
 void initialise_benchmark_results(benchmark_results *b_results);
-void collect_individual_result(performance_result indivi, performance_result *result, int psize, int prank);
+void collect_individual_result(performance_result indivi, performance_result *result, char *max_name, int psize, int prank, char *name);
 void print_results(aggregate_results a_results, int psize);

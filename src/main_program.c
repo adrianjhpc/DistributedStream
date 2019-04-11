@@ -26,14 +26,14 @@ int main(int argc, char **argv){
 
 void collect_results(benchmark_results b_results, aggregate_results *a_results, int psize, int prank){
 
-	collect_individual_result(b_results.Copy, &a_results->Copy, psize, prank);
-	collect_individual_result(b_results.Scale, &a_results->Scale, psize, prank);
-	collect_individual_result(b_results.Add, &a_results->Add, psize, prank);
-	collect_individual_result(b_results.Triad, &a_results->Triad, psize, prank);
+	collect_individual_result(b_results.Copy, &a_results->Copy, &a_results->copy_max, psize, prank, b_results.name);
+	collect_individual_result(b_results.Scale, &a_results->Scale, &a_results->scale_max, psize, prank, b_results.name);
+	collect_individual_result(b_results.Add, &a_results->Add, &a_results->add_max, psize, prank, b_results.name);
+	collect_individual_result(b_results.Triad, &a_results->Triad, &a_results->triad_max, psize, prank. b_results.name);
 
 }
 
-void collect_individual_result(performance_result indivi, performance_result *result, int psize, int prank){
+void collect_individual_result(performance_result indivi, performance_result *result, char *max_name, int psize, int prank, char *name){
 
 
     typedef struct resultloc {
@@ -44,14 +44,22 @@ void collect_individual_result(performance_result indivi, performance_result *re
     resultloc rloc;
 
 	int root = ROOT;
+	MPI_Status status;
 
 	MPI_Reduce(&indivi.avg, &result->avg, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
 	if(prank == root){
 		result->avg = result->avg/psize;
 	}
-	MPI_Reduce(&indivi.max, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, root, MPI_COMM_WORLD);
+	MPI_Allreduce(&indivi.max, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 	result->max = rloc.value;
-	MPI_Reduce(&indivi.min, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, root, MPI_COMM_WORLD);
+	if(rloc.rank == prank && rloc.rank != root){
+		MPI_SSend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
+	}else if(prank == root && rloc.rank != root){
+		MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0 MPI_COMM_WORLD, &status);
+	}else if(rloc.rank == root){
+		max_name = name;
+	}
+	MPI_Allreduce(&indivi.min, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, MPI_COMM_WORLD);
 	result->min = rloc.value;
 
 }
