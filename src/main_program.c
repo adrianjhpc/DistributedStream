@@ -53,7 +53,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	if(prank == root){
 		result->avg = result->avg/psize;
 	}
-	MPI_Reduce(indivi.max, rloc 1, MPI_DOUBLE_INT, MPI_MAXLOC, root, MPI_COMM_WORLD);
+	MPI_Reduce(indivi.max, rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, root, MPI_COMM_WORLD);
 	result->max = rloc.value;
 	MPI_Reduce(indivi.min, rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, root, MPI_COMM_WORLD);
 	result->min = rloc.value;
