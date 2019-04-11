@@ -46,6 +46,6 @@ void initialise_benchmark_results(benchmark_results *b_results){
 	b_results->Triad.min = FLT_MAX;
 	b_results->Triad.max= 0;
 
-	MPI_Get_processor_name(&b_results.name, &name_length);
+	MPI_Get_processor_name(b_results->name, &name_length);
 
 }
