@@ -110,10 +110,10 @@ void print_results(aggregate_results a_results, int psize){
 	bandwidth_av = (1.0E-06 * scale_size)/a_results.Copy.avg;
 	printf("Scale: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", total_data, a_results.Scale.avg, a_results.Scale.min, a_results.Scale.max);
 
-	bandwidth_av = (1.0E-06 * add_size)/a_results.Add.av;
+	bandwidth_av = (1.0E-06 * add_size)/a_results.Add.avg;
 	printf("Add:   %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_av, a_results.Add.avg, a_results.Add.min, a_results.Add.max);
 
-	bandwidth_av = (1.0E-06 * triad_size)/a_results.Triad.min;
+	bandwidth_av = (1.0E-06 * triad_size)/a_results.Triad.avg;
 	printf("Triad: %12.1f:   %11.6f:   %11.6f:   %11.6f\n", bandwidth_av, a_results.Triad.avg, a_results.Triad.min, a_results.Triad.max);
 
 
