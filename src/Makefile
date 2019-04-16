@@ -7,7 +7,7 @@ PP	= -g -DSTREAM_ARRAY_SIZE=80000000 -DNTIMES=20
 
 LDFLAGS = -fopenmp
 CFLAGS  = -fopenmp -ffreestanding -O3 $(PP)
-LIBS    = -lpmem 
+LIBS    = -L/home/nx01/nx01/adrianj/pmdk/1.6/lib -lpmem 
 
 PRGMPI	= distributed_streams
 

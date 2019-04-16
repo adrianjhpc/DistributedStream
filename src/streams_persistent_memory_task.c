@@ -189,6 +189,7 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 	//printf ("Number of Threads counted = %i\n",k);
 #endif
 
+          path = "/mnt/pmem_fsdax0/";
 	  sprintf(path+strlen(path), "pstream_test_file");
 
 	  //[STREAM_ARRAY_SIZE+OFFSET],
@@ -297,17 +298,17 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 	/* note -- skip first iteration */
 	for (k=1; k<NTIMES; k++) {
 		b_results->Copy.avg = b_results->Copy.avg + times[0][k];
-		b_results->Copy.min = MIN(b_results->Copy.avg, times[0][k]);
-		b_results->Copy.max = MAX(b_results->Copy.avg, times[0][k]);
+		b_results->Copy.min = MIN(b_results->Copy.min, times[0][k]);
+		b_results->Copy.max = MAX(b_results->Copy.max, times[0][k]);
 		b_results->Scale.avg = b_results->Scale.avg + times[1][k];
-		b_results->Scale.min = MIN(b_results->Scale.avg, times[1][k]);
-		b_results->Scale.max = MAX(b_results->Scale.avg, times[1][k]);
+		b_results->Scale.min = MIN(b_results->Scale.min, times[1][k]);
+		b_results->Scale.max = MAX(b_results->Scale.max, times[1][k]);
 		b_results->Add.avg = b_results->Add.avg + times[2][k];
-		b_results->Add.min = MIN(b_results->Add.avg, times[2][k]);
-		b_results->Add.max = MAX(b_results->Add.avg, times[2][k]);
+		b_results->Add.min = MIN(b_results->Add.min, times[2][k]);
+		b_results->Add.max = MAX(b_results->Add.max, times[2][k]);
 		b_results->Triad.avg = b_results->Triad.avg + times[3][k];
-		b_results->Triad.min = MIN(b_results->Triad.avg, times[3][k]);
-		b_results->Triad.max = MAX(b_results->Triad.avg, times[3][k]);
+		b_results->Triad.min = MIN(b_results->Triad.min, times[3][k]);
+		b_results->Triad.max = MAX(b_results->Triad.max, times[3][k]);
 	}
 
 	//printf("Function    Best Rate MB/s  Avg time     Min time     Max time\n");

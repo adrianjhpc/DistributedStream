@@ -17,8 +17,20 @@ int main(int argc, char **argv){
 	collect_results(b_results, &a_results, psize, prank);
 
 	if(prank == ROOT){
+		printf("Stream Memory Results");
 		print_results(a_results, psize);
 	}
+
+        initialise_benchmark_results(&b_results);
+
+        stream_persistent_memory_task(&b_results);
+        collect_results(b_results, &a_results, psize, prank);
+
+        if(prank == ROOT){
+		printf("Stream Persistent Memory Results");
+                print_results(a_results, psize);
+        }
+
 
 	MPI_Finalize();
 
