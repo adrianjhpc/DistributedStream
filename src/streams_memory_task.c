@@ -129,8 +129,8 @@ c[STREAM_ARRAY_SIZE+OFFSET];
 static char	*label[4] = {"Copy:      ", "Scale:     ",
 		"Add:       ", "Triad:     "};
 
-double mysecond();
-void checkSTREAMresults();
+static double mysecond();
+static void checkSTREAMresults();
 
 #ifdef TUNED
 extern void tuned_STREAM_Copy();
@@ -311,7 +311,7 @@ int stream_memory_task(benchmark_results *b_results){
 
 # define	M	20
 
-int checktick(){
+static int checktick(){
 	int		i, minDelta, Delta;
 	double	t1, t2, timesfound[M];
 
@@ -343,7 +343,7 @@ int checktick(){
 
 /* A gettimeofday routine to give access to the wall
    clock timer on most UNIX-like systems.  */
-double mysecond(){
+static double mysecond(){
 	struct timeval tp;
 	struct timezone tzp;
 	int i;
@@ -355,7 +355,7 @@ double mysecond(){
 #ifndef abs
 #define abs(a) ((a) >= 0 ? (a) : -(a))
 #endif
-void checkSTREAMresults (){
+static void checkSTREAMresults (){
 	STREAM_TYPE aj,bj,cj,scalar;
 	STREAM_TYPE aSumErr,bSumErr,cSumErr;
 	STREAM_TYPE aAvgErr,bAvgErr,cAvgErr;
