@@ -112,7 +112,7 @@
  *
  *-----------------------------------------------------------------------*/
 
-  char *path;
+  char path[MAX_FILE_NAME_LENGTH];
   char *pmemaddr = NULL;
   int array_element_size;
   int is_pmem;
@@ -137,7 +137,7 @@ extern void tuned_STREAM_Triad(STREAM_TYPE scalar);
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results){
+int stream_persistent_memory_task(benchmark_results *b_results, int prank){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
@@ -170,6 +170,10 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 	//printf(" The *best* time for each kernel (excluding the first iteration)\n");
 	//printf(" will be used to compute the reported bandwidth.\n");
 
+        if(prank == ROOT){
+            printf("Stream Persistent Memory Task\n");
+        }
+
 #ifdef _OPENMP
 #pragma omp parallel
 	{
@@ -188,11 +192,10 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 	k++;
 	//printf ("Number of Threads counted = %i\n",k);
 #endif
-
-          path = "/mnt/pmem_fsdax0/";
+          strcpy(path,"/mnt/pmem_fsdax0/");
+          // The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
 	  sprintf(path+strlen(path), "pstream_test_file");
-
-	  //[STREAM_ARRAY_SIZE+OFFSET],
+	  sprintf(path+strlen(path), "%d", prank);
 
 	  if ((pmemaddr = pmem_map_file(path, (STREAM_ARRAY_SIZE+OFFSET)*BytesPerWord*3,
 					PMEM_FILE_CREATE|PMEM_FILE_EXCL,
@@ -250,10 +253,11 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 #ifdef TUNED
 		tuned_STREAM_Copy();
 #else
+
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			c[j] = a[j];
-		pmem_persist(&c, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
 
 #endif
 		times[0][k] = mysecond() - times[0][k];
@@ -265,7 +269,7 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			b[j] = scalar*c[j];
-		pmem_persist(&b, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(b, STREAM_ARRAY_SIZE*BytesPerWord);
 
 #endif
 		times[1][k] = mysecond() - times[1][k];
@@ -277,7 +281,7 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			c[j] = a[j]+b[j];
-		pmem_persist(&c, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
 #endif
 		times[2][k] = mysecond() - times[2][k];
 
@@ -288,7 +292,7 @@ int stream_persistent_memory_task(benchmark_results *b_results){
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			a[j] = b[j]+scalar*c[j];
-		pmem_persist(&a, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(a, STREAM_ARRAY_SIZE*BytesPerWord);
 
 #endif
 		times[3][k] = mysecond() - times[3][k];
@@ -501,7 +505,7 @@ void tuned_STREAM_Copy(){
 #pragma omp parallel for
 	for (j=0; j<STREAM_ARRAY_SIZE; j++)
 		c[j] = a[j];
-	pmem_persist(&c, STREAM_ARRAY_SIZE*BytesPerWord);
+	pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
 }
 
 void tuned_STREAM_Scale(STREAM_TYPE scalar){
@@ -509,7 +513,7 @@ void tuned_STREAM_Scale(STREAM_TYPE scalar){
 #pragma omp parallel for
 	for (j=0; j<STREAM_ARRAY_SIZE; j++)
 		b[j] = scalar*c[j];
-	pmem_persist(&b, STREAM_ARRAY_SIZE*BytesPerWord);
+	pmem_persist(b, STREAM_ARRAY_SIZE*BytesPerWord);
 }
 
 void tuned_STREAM_Add(){
@@ -517,7 +521,7 @@ void tuned_STREAM_Add(){
 #pragma omp parallel for
 	for (j=0; j<STREAM_ARRAY_SIZE; j++)
 		c[j] = a[j]+b[j];
-	pmem_persist(&c, STREAM_ARRAY_SIZE*BytesPerWord);
+	pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
 
 }
 
@@ -526,7 +530,7 @@ void tuned_STREAM_Triad(STREAM_TYPE scalar){
 #pragma omp parallel for
 	for (j=0; j<STREAM_ARRAY_SIZE; j++)
 		a[j] = b[j]+scalar*c[j];
-	pmem_persist(&a, STREAM_ARRAY_SIZE*BytesPerWord);
+	pmem_persist(a, STREAM_ARRAY_SIZE*BytesPerWord);
 }
 /* end of stubs for the "tuned" versions of the kernels */
 #endif

@@ -142,7 +142,7 @@ extern void tuned_STREAM_Triad(STREAM_TYPE scalar);
 extern int omp_get_num_threads();
 #endif
 
-int stream_memory_task(benchmark_results *b_results){
+int stream_memory_task(benchmark_results *b_results, int prank){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
@@ -154,7 +154,6 @@ int stream_memory_task(benchmark_results *b_results){
 
 	//printf("STREAM version $Revision: 5.10 $\n");
 	BytesPerWord = sizeof(STREAM_TYPE);
-	//printf("This system uses %d bytes per array element.\n",BytesPerWord);
 
 #ifdef N
 	//printf("*****  WARNING: ******\n");
@@ -164,16 +163,20 @@ int stream_memory_task(benchmark_results *b_results){
 	//printf("*****  WARNING: ******\n");
 #endif
 
-	//printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) STREAM_ARRAY_SIZE, OFFSET);
-	//printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
-	//		BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
-	//		BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
-	//printf("Total memory required = %.1f MiB (= %.1f GiB).\n",
-	//		(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
-	//		(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
-	//printf("Each kernel will be executed %d times.\n", NTIMES);
-	//printf(" The *best* time for each kernel (excluding the first iteration)\n");
-	//printf(" will be used to compute the reported bandwidth.\n");
+	if(prank == ROOT){
+            printf("Stream Memory Task\n");
+        printf("This system uses %d bytes per array element.\n",BytesPerWord);
+        printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) STREAM_ARRAY_SIZE, OFFSET);
+        printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
+                        BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
+                        BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
+        printf("Total memory required = %.1f MiB (= %.1f GiB).\n",
+                        (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
+                        (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
+        printf("Each kernel will be executed %d times.\n", NTIMES);
+        printf(" The *best* time for each kernel (excluding the first iteration)\n");
+        printf(" will be used to compute the reported bandwidth.\n");
+        }
 
 #ifdef _OPENMP
 #pragma omp parallel

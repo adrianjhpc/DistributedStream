@@ -3,7 +3,7 @@ SRCMPI	= streams_persistent_memory_task.c streams_memory_task.c main_program.c
 OBJMPI	=$(SRCMPI:.c=.o)
 
 CC	= mpiicc
-PP	= -g -DSTREAM_ARRAY_SIZE=80000000 -DNTIMES=20  
+PP	= -g -DSTREAM_ARRAY_SIZE=80000000 -DNTIMES=5 #-DSTREAM_ARRAY_SIZE=80000000 -DNTIMES=20  
 
 LDFLAGS = -fopenmp
 CFLAGS  = -fopenmp -ffreestanding -O3 $(PP)

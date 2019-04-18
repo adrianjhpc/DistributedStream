@@ -13,24 +13,23 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results);
 
-	stream_memory_task(&b_results);
+	stream_memory_task(&b_results, prank);
 	collect_results(b_results, &a_results, psize, prank);
 
 	if(prank == ROOT){
-		printf("Stream Memory Results");
 		print_results(a_results, psize);
 	}
 
-        initialise_benchmark_results(&b_results);
+        /*initialise_benchmark_results(&b_results);
 
-        stream_persistent_memory_task(&b_results);
+        stream_persistent_memory_task(&b_results, prank);
         collect_results(b_results, &a_results, psize, prank);
 
         if(prank == ROOT){
 		printf("Stream Persistent Memory Results");
                 print_results(a_results, psize);
         }
-
+*/
 
 	MPI_Finalize();
 
