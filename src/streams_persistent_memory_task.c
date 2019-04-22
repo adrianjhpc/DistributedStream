@@ -11,45 +11,21 @@
  *	1) STREAM requires different amounts of memory to run on different
  *           systems, depending on both the system cache size(s) and the
  *           granularity of the system timer.
- *     You should adjust the value of 'STREAM_ARRAY_SIZE' (below)
- *           to meet *both* of the following criteria:
+ *     You should adjust the value of 'LAST_LEVEL_CACHE_SIZE' (below or
+ *           passed at compile time) to allow the code to calculate how
+ *           big each MPI processes' array should be. Array sizes should
+ *           meet both of the following criteria:
  *       (a) Each array must be at least 4 times the size of the
- *           available cache memory. I don't worry about the difference
- *           between 10^6 and 2^20, so in practice the minimum array size
- *           is about 3.8 times the cache size.
- *           Example 1: One Xeon E3 with 8 MB L3 cache
- *               STREAM_ARRAY_SIZE should be >= 4 million, giving
- *               an array size of 30.5 MB and a total memory requirement
- *               of 91.5 MB.
- *           Example 2: Two Xeon E5's with 20 MB L3 cache each (using OpenMP)
- *               STREAM_ARRAY_SIZE should be >= 20 million, giving
- *               an array size of 153 MB and a total memory requirement
- *               of 458 MB.
+ *           available last level cache memory.
  *       (b) The size should be large enough so that the 'timing calibration'
  *           output by the program is at least 20 clock-ticks.
  *           Example: most versions of Windows have a 10 millisecond timer
  *               granularity.  20 "ticks" at 10 ms/tic is 200 milliseconds.
- *               If the chip is capable of 10 GB/s, it moves 2 GB in 200 msec.
- *               This means the each array must be at least 1 GB, or 128M elements.
- *
- *      Version 5.10 increases the default array size from 2 million
- *          elements to 10 million elements in response to the increasing
- *          size of L3 caches.  The new default size is large enough for caches
- *          up to 20 MB.
- *      Version 5.10 changes the loop index variables from "register int"
- *          to "ssize_t", which allows array indices >2^32 (4 billion)
- *          on properly configured 64-bit systems.  Additional compiler options
- *          (such as "-mcmodel=medium") may be required for large memory runs.
- *
- *      Array size can be set at compile time without modifying the source
- *          code for the (many) compilers that support preprocessor definitions
- *          on the compile line.  E.g.,
- *                gcc -O -DSTREAM_ARRAY_SIZE=100000000 stream.c -o stream.100M
- *          will override the default size of 10M with a new size of 100M elements
- *          per array.
+ *               If the processor and memory are capable of 10 GB/s, this is 2 GB in 200 msec.
+ *               This means the each array must be at least 1 GB.
  */
-#ifndef STREAM_ARRAY_SIZE
-#   define STREAM_ARRAY_SIZE	10000000
+#ifndef LAST_LEVEL_CACHE_SIZE
+#   define LAST_LEVEL_CACHE_SIZE	1000000
 #endif
 
 /*  2) STREAM runs each kernel "NTIMES" times and reports the *best* result
@@ -103,47 +79,38 @@
  *         -DSTREAM_TYPE=float
  *     to the compile line.
  *     Note that this changes the minimum array sizes required --- see (1) above.
- *
- *     The preprocessor directive "TUNED" does not do much -- it simply causes the
- *       code to call separate functions to execute each kernel.  Trivial versions
- *       of these functions are provided, but they are *not* tuned -- they just
- *       provide predefined interfaces to be replaced with tuned code.
- *
- *
+
  *-----------------------------------------------------------------------*/
 
-  char path[MAX_FILE_NAME_LENGTH];
-  char *pmemaddr = NULL;
-  int array_element_size;
-  int is_pmem;
-  size_t mapped_len;
+char path[MAX_FILE_NAME_LENGTH];
+char *pmemaddr = NULL;
+int array_element_size;
+int is_pmem;
+size_t mapped_len;
 
 STREAM_TYPE	*a, *b, *c;
 
 
 static char	*label[4] = {"Copy:      ", "Scale:     ",
 		"Add:       ", "Triad:     "};
+static int array_size;
 
 static double mysecond();
 static void checkSTREAMresults();
 
-#ifdef TUNED
-extern void tuned_STREAM_Copy();
-extern void tuned_STREAM_Scale(STREAM_TYPE scalar);
-extern void tuned_STREAM_Add();
-extern void tuned_STREAM_Triad(STREAM_TYPE scalar);
-#endif
 #ifdef _OPENMP
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, int prank){
+int stream_persistent_memory_task(benchmark_results *b_results, int psize, int prank){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
 	ssize_t		j;
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
+
+	array_size = (LAST_LEVEL_CACHE*4)/psize;
 
 	/* --- SETUP --- determine precision and check timing --- */
 
@@ -170,9 +137,9 @@ int stream_persistent_memory_task(benchmark_results *b_results, int prank){
 	//printf(" The *best* time for each kernel (excluding the first iteration)\n");
 	//printf(" will be used to compute the reported bandwidth.\n");
 
-        if(prank == ROOT){
-            printf("Stream Persistent Memory Task\n");
-        }
+	if(prank == ROOT){
+		printf("Stream Persistent Memory Task\n");
+	}
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -192,24 +159,24 @@ int stream_persistent_memory_task(benchmark_results *b_results, int prank){
 	k++;
 	//printf ("Number of Threads counted = %i\n",k);
 #endif
-          strcpy(path,"/mnt/pmem_fsdax0/");
-          // The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
-	  sprintf(path+strlen(path), "pstream_test_file");
-	  sprintf(path+strlen(path), "%d", prank);
+	strcpy(path,"/mnt/pmem_fsdax0/");
+	// The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
+	sprintf(path+strlen(path), "pstream_test_file");
+	sprintf(path+strlen(path), "%d", prank);
 
-	  if ((pmemaddr = pmem_map_file(path, (STREAM_ARRAY_SIZE+OFFSET)*BytesPerWord*3,
-					PMEM_FILE_CREATE|PMEM_FILE_EXCL,
-					0666, &mapped_len, &is_pmem)) == NULL) {
-	    perror("pmem_map_file");
-	    fprintf(stderr, "Failed to pmem_map_file for filename:%s.\n", path);
-	    exit(-100);
-	  }
+	if ((pmemaddr = pmem_map_file(path, (array_size+OFFSET)*BytesPerWord*3,
+			PMEM_FILE_CREATE|PMEM_FILE_EXCL,
+			0666, &mapped_len, &is_pmem)) == NULL) {
+		perror("pmem_map_file");
+		fprintf(stderr, "Failed to pmem_map_file for filename:%s.\n", path);
+		exit(-100);
+	}
 
-	  printf("Using file %s for pmem\n",path);
+	printf("Using file %s for pmem\n",path);
 
-	  a = pmemaddr;
-	  b = pmemaddr + (STREAM_ARRAY_SIZE+OFFSET)*BytesPerWord;
-	  c = pmemaddr + (STREAM_ARRAY_SIZE+OFFSET)*BytesPerWord*2;
+	a = pmemaddr;
+	b = pmemaddr + (array_size+OFFSET)*BytesPerWord;
+	c = pmemaddr + (array_size+OFFSET)*BytesPerWord*2;
 
 	/* Get initial value for system clock. */
 #pragma omp parallel for
@@ -250,51 +217,36 @@ int stream_persistent_memory_task(benchmark_results *b_results, int prank){
 	for (k=0; k<NTIMES; k++)
 	{
 		times[0][k] = mysecond();
-#ifdef TUNED
-		tuned_STREAM_Copy();
-#else
-
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			c[j] = a[j];
 		pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
 
-#endif
 		times[0][k] = mysecond() - times[0][k];
 
 		times[1][k] = mysecond();
-#ifdef TUNED
-		tuned_STREAM_Scale(scalar);
-#else
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			b[j] = scalar*c[j];
 		pmem_persist(b, STREAM_ARRAY_SIZE*BytesPerWord);
 
-#endif
 		times[1][k] = mysecond() - times[1][k];
 
 		times[2][k] = mysecond();
-#ifdef TUNED
-		tuned_STREAM_Add();
-#else
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			c[j] = a[j]+b[j];
 		pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
-#endif
+
 		times[2][k] = mysecond() - times[2][k];
 
 		times[3][k] = mysecond();
-#ifdef TUNED
-		tuned_STREAM_Triad(scalar);
-#else
+
 #pragma omp parallel for
 		for (j=0; j<STREAM_ARRAY_SIZE; j++)
 			a[j] = b[j]+scalar*c[j];
 		pmem_persist(a, STREAM_ARRAY_SIZE*BytesPerWord);
 
-#endif
 		times[3][k] = mysecond() - times[3][k];
 	}
 
@@ -498,40 +450,4 @@ static void checkSTREAMresults (){
 #endif
 }
 
-#ifdef TUNED
-/* stubs for "tuned" versions of the kernels */
-void tuned_STREAM_Copy(){
-	ssize_t j;
-#pragma omp parallel for
-	for (j=0; j<STREAM_ARRAY_SIZE; j++)
-		c[j] = a[j];
-	pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
-}
-
-void tuned_STREAM_Scale(STREAM_TYPE scalar){
-	ssize_t j;
-#pragma omp parallel for
-	for (j=0; j<STREAM_ARRAY_SIZE; j++)
-		b[j] = scalar*c[j];
-	pmem_persist(b, STREAM_ARRAY_SIZE*BytesPerWord);
-}
-
-void tuned_STREAM_Add(){
-	ssize_t j;
-#pragma omp parallel for
-	for (j=0; j<STREAM_ARRAY_SIZE; j++)
-		c[j] = a[j]+b[j];
-	pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
-
-}
-
-void tuned_STREAM_Triad(STREAM_TYPE scalar){
-	ssize_t j;
-#pragma omp parallel for
-	for (j=0; j<STREAM_ARRAY_SIZE; j++)
-		a[j] = b[j]+scalar*c[j];
-	pmem_persist(a, STREAM_ARRAY_SIZE*BytesPerWord);
-}
-/* end of stubs for the "tuned" versions of the kernels */
-#endif
 

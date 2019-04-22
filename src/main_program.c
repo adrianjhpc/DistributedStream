@@ -13,7 +13,7 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results);
 
-	stream_memory_task(&b_results, prank);
+	stream_memory_task(&b_results, psize, prank);
 	collect_results(b_results, &a_results, psize, prank);
 
 	if(prank == ROOT){
@@ -22,7 +22,7 @@ int main(int argc, char **argv){
 
         /*initialise_benchmark_results(&b_results);
 
-        stream_persistent_memory_task(&b_results, prank);
+        stream_persistent_memory_task(&b_results, psize, prank);
         collect_results(b_results, &a_results, psize, prank);
 
         if(prank == ROOT){
