@@ -70,17 +70,16 @@ static char	*label[4] = {"Copy:      ", "Scale:     ",
 		"Add:       ", "Triad:     "};
 
 static double mysecond();
-static void checkSTREAMresults();
+static void checkSTREAMresults(int array_size);
 
 #ifdef _OPENMP
 extern int omp_get_num_threads();
 #endif
 
-static int array_size;
 STREAM_TYPE	*a, *b, *c;
 
 
-int stream_memory_task(benchmark_results *b_results, int psize, int prank, int node_size){
+int stream_memory_task(benchmark_results *b_results, int psize, int prank, int node_size, int *array_size){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
@@ -88,11 +87,11 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
 
-	array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
+	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
 
-	a = malloc(sizeof(STREAM_TYPE)*(array_size+OFFSET));
-	b = malloc(sizeof(STREAM_TYPE)*(array_size+OFFSET));
-	c = malloc(sizeof(STREAM_TYPE)*(array_size+OFFSET));
+	a = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
+	b = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
+	c = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
 	/* --- SETUP --- determine precision and check timing --- */
 
 	//printf("STREAM version $Revision: 5.10 $\n");
@@ -102,13 +101,13 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 	if(prank == ROOT){
 		printf("Stream Memory Task\n");
 		printf("This system uses %d bytes per array element.\n",BytesPerWord);
-		printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) array_size, OFFSET);
+		printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) *array_size, OFFSET);
 		printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
-				BytesPerWord * ( (double) array_size / 1024.0/1024.0),
-				BytesPerWord * ( (double) array_size / 1024.0/1024.0/1024.0));
+				BytesPerWord * ( (double) *array_size / 1024.0/1024.0),
+				BytesPerWord * ( (double) *array_size / 1024.0/1024.0/1024.0));
 		printf("Total memory required = %.1f MiB (= %.1f GiB).\n",
-				(3.0 * BytesPerWord) * ( (double) array_size / 1024.0/1024.),
-				(3.0 * BytesPerWord) * ( (double) array_size / 1024.0/1024./1024.));
+				(3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024.),
+				(3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024./1024.));
 		printf("Each kernel will be executed %d times.\n", NTIMES);
 		printf(" The *best* time for each kernel (excluding the first iteration)\n");
 		printf(" will be used to compute the reported bandwidth.\n");
@@ -135,7 +134,7 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 
 	/* Get initial value for system clock. */
 #pragma omp parallel for
-	for (j=0; j<array_size; j++) {
+	for (j=0; j<*array_size; j++) {
 		a[j] = 1.0;
 		b[j] = 2.0;
 		c[j] = 0.0;
@@ -152,7 +151,7 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 
 	t = mysecond();
 #pragma omp parallel for
-	for (j = 0; j < array_size; j++)
+	for (j = 0; j < *array_size; j++)
 		a[j] = 2.0E0 * a[j];
 	t = 1.0E6 * (mysecond() - t);
 
@@ -173,25 +172,25 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 	{
 		times[0][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			c[j] = a[j];
 		times[0][k] = mysecond() - times[0][k];
 
 		times[1][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			b[j] = scalar*c[j];
 		times[1][k] = mysecond() - times[1][k];
 
 		times[2][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			c[j] = a[j]+b[j];
 		times[2][k] = mysecond() - times[2][k];
 
 		times[3][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			a[j] = b[j]+scalar*c[j];
 		times[3][k] = mysecond() - times[3][k];
 	}
@@ -227,7 +226,7 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 	//		maxtime[j]);
 
 	/* --- Check Results --- */
-	checkSTREAMresults();
+	checkSTREAMresults(*array_size);
 
 	free(a);
 	free(b);
@@ -282,7 +281,7 @@ static double mysecond(){
 #ifndef abs
 #define abs(a) ((a) >= 0 ? (a) : -(a))
 #endif
-static void checkSTREAMresults (){
+static void checkSTREAMresults (int array_size){
 	STREAM_TYPE aj,bj,cj,scalar;
 	STREAM_TYPE aSumErr,bSumErr,cSumErr;
 	STREAM_TYPE aAvgErr,bAvgErr,cAvgErr;

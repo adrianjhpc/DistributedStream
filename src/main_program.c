@@ -7,6 +7,7 @@ int main(int argc, char **argv){
 	char procname[MPI_MAX_PROCESSOR_NAME];
 	int node_comm, node_key;
 	int omp_thread_num;
+	int array_size;
 	benchmark_results b_results;
 	aggregate_results a_results;
 
@@ -23,21 +24,21 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results);
 
-	stream_memory_task(&b_results, psize, prank, node_size);
+	stream_memory_task(&b_results, psize, prank, node_size, &array_size);
 	collect_results(b_results, &a_results, psize, prank);
 
 	if(prank == ROOT){
-		print_results(a_results, psize);
+		print_results(a_results, psize, array_size);
 	}
 
 	/*initialise_benchmark_results(&b_results);
 
-        stream_persistent_memory_task(&b_results, psize, prank, node_size);
+        stream_persistent_memory_task(&b_results, psize, prank, node_size, &array_size);
         collect_results(b_results, &a_results, psize, prank);
 
         if(prank == ROOT){
 		printf("Stream Persistent Memory Results");
-                print_results(a_results, psize);
+                print_results(a_results, psize, array_size);
         }
 	 */
 
@@ -123,14 +124,14 @@ void initialise_benchmark_results(benchmark_results *b_results){
 // be called from the root process as the overall design is that
 // only the root process (the process which has ROOT rank) will
 // have this data.
-void print_results(aggregate_results a_results, int psize){
+void print_results(aggregate_results a_results, int psize, int array_size){
 
 	int omp_thread_num;
 	double bandwidth_avg, bandwidth_max, bandwidth_min;
-	double copy_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
-	double scale_size = 2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
-	double add_size	= 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
-	double triad_size = 3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE;
+	double copy_size = 2 * sizeof(STREAM_TYPE) * array_size;
+	double scale_size = 2 * sizeof(STREAM_TYPE) * array_size;
+	double add_size	= 3 * sizeof(STREAM_TYPE) * array_size;
+	double triad_size = 3 * sizeof(STREAM_TYPE) * array_size;
 
 
 #pragma omp parallel default(shared)

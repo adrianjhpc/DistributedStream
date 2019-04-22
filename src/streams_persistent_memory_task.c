@@ -78,16 +78,15 @@ STREAM_TYPE	*a, *b, *c;
 
 static char	*label[4] = {"Copy:      ", "Scale:     ",
 		"Add:       ", "Triad:     "};
-static int array_size;
 
 static double mysecond();
-static void checkSTREAMresults();
+static void checkSTREAMresults(int array_size);
 
 #ifdef _OPENMP
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, int psize, int prank, int node_size){
+int stream_persistent_memory_task(benchmark_results *b_results, int psize, int prank, int node_size, int *array_size){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
@@ -95,7 +94,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
 
-	array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
+	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
 
 	/* --- SETUP --- determine precision and check timing --- */
 
@@ -149,7 +148,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	sprintf(path+strlen(path), "pstream_test_file");
 	sprintf(path+strlen(path), "%d", prank);
 
-	if ((pmemaddr = pmem_map_file(path, (array_size+OFFSET)*BytesPerWord*3,
+	if ((pmemaddr = pmem_map_file(path, (*array_size+OFFSET)*BytesPerWord*3,
 			PMEM_FILE_CREATE|PMEM_FILE_EXCL,
 			0666, &mapped_len, &is_pmem)) == NULL) {
 		perror("pmem_map_file");
@@ -160,12 +159,12 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	printf("Using file %s for pmem\n",path);
 
 	a = pmemaddr;
-	b = pmemaddr + (array_size+OFFSET)*BytesPerWord;
-	c = pmemaddr + (array_size+OFFSET)*BytesPerWord*2;
+	b = pmemaddr + (*array_size+OFFSET)*BytesPerWord;
+	c = pmemaddr + (*array_size+OFFSET)*BytesPerWord*2;
 
 	/* Get initial value for system clock. */
 #pragma omp parallel for
-	for (j=0; j<array_size; j++) {
+	for (j=0; j<*array_size; j++) {
 		a[j] = 1.0;
 		b[j] = 2.0;
 		c[j] = 0.0;
@@ -182,7 +181,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 
 	t = mysecond();
 #pragma omp parallel for
-	for (j = 0; j < array_size; j++)
+	for (j = 0; j < *array_size; j++)
 		a[j] = 2.0E0 * a[j];
 	t = 1.0E6 * (mysecond() - t);
 
@@ -203,34 +202,34 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	{
 		times[0][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			c[j] = a[j];
-		pmem_persist(c, array_size*BytesPerWord);
+		pmem_persist(c, *array_size*BytesPerWord);
 
 		times[0][k] = mysecond() - times[0][k];
 
 		times[1][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			b[j] = scalar*c[j];
-		pmem_persist(b, array_size*BytesPerWord);
+		pmem_persist(b, *array_size*BytesPerWord);
 
 		times[1][k] = mysecond() - times[1][k];
 
 		times[2][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			c[j] = a[j]+b[j];
-		pmem_persist(c, array_size*BytesPerWord);
+		pmem_persist(c, *array_size*BytesPerWord);
 
 		times[2][k] = mysecond() - times[2][k];
 
 		times[3][k] = mysecond();
 
 #pragma omp parallel for
-		for (j=0; j<array_size; j++)
+		for (j=0; j<*array_size; j++)
 			a[j] = b[j]+scalar*c[j];
-		pmem_persist(a, array_size*BytesPerWord);
+		pmem_persist(a, *array_size*BytesPerWord);
 
 		times[3][k] = mysecond() - times[3][k];
 	}
@@ -320,7 +319,7 @@ static double mysecond(){
 #ifndef abs
 #define abs(a) ((a) >= 0 ? (a) : -(a))
 #endif
-static void checkSTREAMresults (){
+static void checkSTREAMresults (int array_size){
 	STREAM_TYPE aj,bj,cj,scalar;
 	STREAM_TYPE aSumErr,bSumErr,cSumErr;
 	STREAM_TYPE aAvgErr,bAvgErr,cAvgErr;
