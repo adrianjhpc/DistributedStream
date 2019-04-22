@@ -265,7 +265,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	//		maxtime[j]);
 
 	/* --- Check Results --- */
-	checkSTREAMresults();
+	checkSTREAMresults(*array_size);
 
 	pmem_unmap(pmemaddr, mapped_len);
 
