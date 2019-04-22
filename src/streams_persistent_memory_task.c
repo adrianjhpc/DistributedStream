@@ -50,7 +50,7 @@
  *         relative alignment of the arrays (though compilers may change the
  *         effective offset by making the arrays non-contiguous on some systems).
  *      Use of non-zero values for OFFSET can be especially helpful if the
- *         STREAM_ARRAY_SIZE is set to a value close to a large power of 2.
+ *         array size is set to a value close to a large power of 2.
  *      OFFSET can also be set on the compile line without changing the source
  *         code using, for example, "-DOFFSET=56".
  */
@@ -59,21 +59,6 @@
 #endif
 
 /*
- *	3) Compile the code with optimization.  Many compilers generate
- *       unreasonably bad code before the optimizer tightens things up.
- *     If the results are unreasonably good, on the other hand, the
- *       optimizer might be too smart for me!
- *
- *     For a simple single-core version, try compiling with:
- *            cc -O stream.c -o stream
- *     This is known to work on many, many systems....
- *
- *     To use multiple cores, you need to tell the compiler to obey the OpenMP
- *       directives in the code.  This varies by compiler, but a common example is
- *            gcc -O -fopenmp stream.c -o stream_omp
- *       The environment variable OMP_NUM_THREADS allows runtime control of the
- *         number of threads/cores used when the resulting "stream_omp" program
- *         is executed.
  *
  *     To run with single-precision variables and arithmetic, simply add
  *         -DSTREAM_TYPE=float
@@ -180,7 +165,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 
 	/* Get initial value for system clock. */
 #pragma omp parallel for
-	for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+	for (j=0; j<array_size; j++) {
 		a[j] = 1.0;
 		b[j] = 2.0;
 		c[j] = 0.0;
@@ -197,7 +182,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 
 	t = mysecond();
 #pragma omp parallel for
-	for (j = 0; j < STREAM_ARRAY_SIZE; j++)
+	for (j = 0; j < array_size; j++)
 		a[j] = 2.0E0 * a[j];
 	t = 1.0E6 * (mysecond() - t);
 
@@ -218,34 +203,34 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	{
 		times[0][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<STREAM_ARRAY_SIZE; j++)
+		for (j=0; j<array_size; j++)
 			c[j] = a[j];
-		pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(c, array_size*BytesPerWord);
 
 		times[0][k] = mysecond() - times[0][k];
 
 		times[1][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<STREAM_ARRAY_SIZE; j++)
+		for (j=0; j<array_size; j++)
 			b[j] = scalar*c[j];
-		pmem_persist(b, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(b, array_size*BytesPerWord);
 
 		times[1][k] = mysecond() - times[1][k];
 
 		times[2][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<STREAM_ARRAY_SIZE; j++)
+		for (j=0; j<array_size; j++)
 			c[j] = a[j]+b[j];
-		pmem_persist(c, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(c, array_size*BytesPerWord);
 
 		times[2][k] = mysecond() - times[2][k];
 
 		times[3][k] = mysecond();
 
 #pragma omp parallel for
-		for (j=0; j<STREAM_ARRAY_SIZE; j++)
+		for (j=0; j<array_size; j++)
 			a[j] = b[j]+scalar*c[j];
-		pmem_persist(a, STREAM_ARRAY_SIZE*BytesPerWord);
+		pmem_persist(a, array_size*BytesPerWord);
 
 		times[3][k] = mysecond() - times[3][k];
 	}
@@ -363,15 +348,15 @@ static void checkSTREAMresults (){
 	aSumErr = 0.0;
 	bSumErr = 0.0;
 	cSumErr = 0.0;
-	for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+	for (j=0; j<array_size; j++) {
 		aSumErr += abs(a[j] - aj);
 		bSumErr += abs(b[j] - bj);
 		cSumErr += abs(c[j] - cj);
 		// if (j == 417) printf("Index 417: c[j]: %f, cj: %f\n",c[j],cj);	// MCCALPIN
 	}
-	aAvgErr = aSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
-	bAvgErr = bSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
-	cAvgErr = cSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
+	aAvgErr = aSumErr / (STREAM_TYPE) array_size;
+	bAvgErr = bSumErr / (STREAM_TYPE) array_size;
+	cAvgErr = cSumErr / (STREAM_TYPE) array_size;
 
 	if (sizeof(STREAM_TYPE) == 4) {
 		epsilon = 1.e-6;
@@ -390,7 +375,7 @@ static void checkSTREAMresults (){
 		printf ("Failed Validation on array a[], AvgRelAbsErr > epsilon (%e)\n",epsilon);
 		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",aj,aAvgErr,abs(aAvgErr)/aj);
 		ierr = 0;
-		for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+		for (j=0; j<array_size; j++) {
 			if (abs(a[j]/aj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
@@ -409,7 +394,7 @@ static void checkSTREAMresults (){
 		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",bj,bAvgErr,abs(bAvgErr)/bj);
 		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
 		ierr = 0;
-		for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+		for (j=0; j<array_size; j++) {
 			if (abs(b[j]/bj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
@@ -428,7 +413,7 @@ static void checkSTREAMresults (){
 		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",cj,cAvgErr,abs(cAvgErr)/cj);
 		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
 		ierr = 0;
-		for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+		for (j=0; j<array_size; j++) {
 			if (abs(c[j]/cj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
