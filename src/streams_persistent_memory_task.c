@@ -110,7 +110,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
 
-	array_size = (LAST_LEVEL_CACHE*4)/node_size;
+	array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
 
 	/* --- SETUP --- determine precision and check timing --- */
 

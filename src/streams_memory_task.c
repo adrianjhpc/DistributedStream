@@ -88,7 +88,7 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
 
-	array_size = (LAST_LEVEL_CACHE*4)/node_size;
+	array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
 
 	a = malloc(sizeof(STREAM_TYPE)*(array_size+OFFSET));
 	b = malloc(sizeof(STREAM_TYPE)*(array_size+OFFSET));
