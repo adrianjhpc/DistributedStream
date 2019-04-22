@@ -3,6 +3,9 @@
 int main(int argc, char **argv){
 
 	int prank, psize;
+	int node_size, node_rank;
+	char procname[MPI_MAX_PROCESSOR_NAME];
+	int node_comm, node_key;
 	int omp_thread_num;
 	benchmark_results b_results;
 	aggregate_results a_results;
@@ -11,25 +14,32 @@ int main(int argc, char **argv){
 	MPI_Comm_size(MPI_COMM_WORLD, &psize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
+	node_key = get_key(procname);
+
+	MPI_Comm_split(MPI_COMM_WORLD,node_key,0,&node_comm);
+
+	MPI_Comm_size(node_comm, &node_size);
+	MPI_Comm_rank(node_comm, &node_rank);
+
 	initialise_benchmark_results(&b_results);
 
-	stream_memory_task(&b_results, psize, prank);
+	stream_memory_task(&b_results, psize, prank, node_size);
 	collect_results(b_results, &a_results, psize, prank);
 
 	if(prank == ROOT){
 		print_results(a_results, psize);
 	}
 
-        /*initialise_benchmark_results(&b_results);
+	/*initialise_benchmark_results(&b_results);
 
-        stream_persistent_memory_task(&b_results, psize, prank);
+        stream_persistent_memory_task(&b_results, psize, prank, node_size);
         collect_results(b_results, &a_results, psize, prank);
 
         if(prank == ROOT){
 		printf("Stream Persistent Memory Results");
                 print_results(a_results, psize);
         }
-*/
+	 */
 
 	MPI_Finalize();
 
@@ -161,5 +171,58 @@ void print_results(aggregate_results a_results, int psize){
 	bandwidth_min = (1.0E-06 * triad_size)/a_results.Triad.max;
 	printf("Triad:    %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, a_results.Triad.avg, bandwidth_max, a_results.Triad.min, bandwidth_min, a_results.Triad.max, a_results.triad_max);
 
+}
+
+#if defined(__aarch64__)
+// TODO: This might be general enough to provide the functionality for any system
+// regardless of processor type given we aren't worried about thread/process migration.
+// Test on Intel systems and see if we can get rid of the architecture specificity
+// of the code.
+unsigned long get_processor_and_core(int *chip, int *core){
+	return syscall(SYS_getcpu, &core, &chip, NULL);
+}
+// TODO: Add in AMD function
+#else
+// If we're not on an ARM processor assume we're on an intel processor and use the
+// rdtscp instruction.
+unsigned long get_processor_and_core(int *chip, int *core)
+{
+	unsigned long a,d,c;
+	__asm__ volatile("rdtscp" : "=a" (a), "=d" (d), "=c" (c));
+	*chip = (c & 0xFFF000)>>12;
+	*core = c & 0xFFF;
+	return ((unsigned long)a) | (((unsigned long)d) << 32);;
+}
+#endif
+
+int name_to_colour(const char *name){
+	int res;
+	const char *p;
+	res =0;
+	for(p=name; *p ; p++){
+		res = (131*res) + *p;
+	}
+
+	if( res < 0 ){
+		res = -res;
+	}
+	return res;
+}
+
+int get_key(char *name){
+
+	int len;
+	int lpar_key;
+	int cpu;
+	int core;
+
+	MPI_Get_processor_name(name, &len);
+	get_processor_and_core(&cpu,&core);
+	name = name + cpu;
+	lpar_key = name_to_colour(name);
+
+	lpar_key = cpu + lpar_key;
+
+	return lpar_key;
 
 }

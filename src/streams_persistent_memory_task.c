@@ -102,7 +102,7 @@ static void checkSTREAMresults();
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, int psize, int prank){
+int stream_persistent_memory_task(benchmark_results *b_results, int psize, int prank, int node_size){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
@@ -110,7 +110,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
 
-	array_size = (LAST_LEVEL_CACHE*4)/psize;
+	array_size = (LAST_LEVEL_CACHE*4)/node_size;
 
 	/* --- SETUP --- determine precision and check timing --- */
 
