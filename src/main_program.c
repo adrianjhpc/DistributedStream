@@ -244,9 +244,11 @@ int get_key(char *name){
 	int lpar_key;
 	int cpu;
 	int core;
+	int rank;
 
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Get_processor_name(name, &len);
-	printf("name: %s",name);
+	printf("%d name: %s",rank,name);
 	get_processor_and_core(&cpu,&core);
 	name = name + cpu;
 	lpar_key = name_to_colour(name);
