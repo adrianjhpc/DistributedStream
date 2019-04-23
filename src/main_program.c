@@ -246,6 +246,7 @@ int get_key(char *name){
 	int core;
 
 	MPI_Get_processor_name(name, &len);
+	printf("name: %s",name);
 	get_processor_and_core(&cpu,&core);
 	name = name + cpu;
 	lpar_key = name_to_colour(name);
