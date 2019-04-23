@@ -53,4 +53,4 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 void collect_results(benchmark_results result, aggregate_results *agg_result, int psize, int prank);
 void initialise_benchmark_results(benchmark_results *b_results);
 void collect_individual_result(performance_result indivi, performance_result *result, char *max_name, int psize, int prank, char *name);
-void print_results(aggregate_results a_results, int psize, int array_size);
+void print_results(aggregate_results a_results, int psize, int array_size, int processes_per_node);
