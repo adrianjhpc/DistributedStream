@@ -139,7 +139,7 @@ void print_results(aggregate_results a_results, int psize, int array_size, int p
 		omp_thread_num = omp_get_num_threads();
 	}
 
-	printf("Running with %d MPI processes, each with %d OpenMP threads\n", psize, omp_thread_num);
+	printf("Running with %d MPI processes, each with %d OpenMP threads. %d processes per node\n", psize, omp_thread_num, processes_per_node);
 	printf("Benchmark   Average Bandwidth    Avg Time    Max Bandwidth   Min Time    Min Bandwidth   Max Time   Max Time Location\n");
 	printf("                  (GB/s)         (seconds)       (GB/s)      (seconds)       (GB/s)      (seconds)      (proc name)\n");
 	printf("----------------------------------------------------------------------------------------------------------------------\n");
