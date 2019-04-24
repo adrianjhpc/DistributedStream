@@ -9,6 +9,7 @@ int main(int argc, char **argv){
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
+	benchmark_results node_results;
 	aggregate_results a_results;
 
 	MPI_Init(&argc, &argv);
@@ -23,9 +24,10 @@ int main(int argc, char **argv){
 	MPI_Comm_rank(node_comm, &node_rank);
 
 	initialise_benchmark_results(&b_results);
+	initialise_benchmakr_results(&node_results);
 
 	stream_memory_task(&b_results, psize, prank, node_size, &array_size);
-	collect_results(b_results, &a_results, psize, prank);
+	collect_results(b_results, &a_results, psize, prank, node_comm, node_size, node_rank);
 
 	if(prank == ROOT){
 		print_results(a_results, psize, array_size, node_size);
@@ -34,7 +36,7 @@ int main(int argc, char **argv){
 	/*initialise_benchmark_results(&b_results);
 
         stream_persistent_memory_task(&b_results, psize, prank, node_size, &array_size);
-        collect_results(b_results, &a_results, psize, prank);
+        collect_results(b_results, &a_results, psize, prank, node_comm, node_size, node_rank);
 
         if(prank == ROOT){
 		printf("Stream Persistent Memory Results");
@@ -46,16 +48,16 @@ int main(int argc, char **argv){
 
 }
 
-void collect_results(benchmark_results b_results, aggregate_results *a_results, int psize, int prank){
+void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, int psize, int prank, int node_comm, int node_size, int node_rank){
 
-	collect_individual_result(b_results.Copy, &a_results->Copy, a_results->copy_max, psize, prank, b_results.name);
-	collect_individual_result(b_results.Scale, &a_results->Scale, a_results->scale_max, psize, prank, b_results.name);
-	collect_individual_result(b_results.Add, &a_results->Add, a_results->add_max, psize, prank, b_results.name);
-	collect_individual_result(b_results.Triad, &a_results->Triad, a_results->triad_max, psize, prank, b_results.name);
+	collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
+	collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
+	collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
+	collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
 
 }
 
-void collect_individual_result(performance_result indivi, performance_result *result, char *max_name, int psize, int prank, char *name){
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, int psize, int prank, char *name, int node_comm, int node_size, int node_rank){
 
 	// Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
 	// This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
@@ -64,6 +66,9 @@ void collect_individual_result(performance_result indivi, performance_result *re
 		double value;
 		int   rank;
 	} resultloc;
+
+	double temp_value;
+	double temp_result;
 
 	// Variable for the result of the reduction
 	resultloc rloc;
@@ -77,6 +82,13 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	if(prank == root){
 		result->avg = result->avg/psize;
 	}
+
+	// Get the total avg value summed across all processes in a node to enable calculation
+	// of the avg bandwidth for a node.
+	temp_value = indivi.avg;
+	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
+	node_result->avg = temp_result;
+
 	iloc.value = indivi.max;
 	iloc.rank = prank;
 	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
@@ -84,6 +96,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 		printf("Error with the output of MPI_MAXLOC reduction");
 	}
 	result->max = rloc.value;
+	// Communicate which node has the biggest max value so outlier nodes can be identified
 	if(rloc.rank == prank && rloc.rank != root){
 		MPI_Ssend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
 	}else if(prank == root && rloc.rank != root){
@@ -91,10 +104,23 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	}else if(rloc.rank == root){
 		strcpy(max_name, name);
 	}
+
+	// Get the total max value summed across all processes in a node to enable calculation
+	// of the minimum bandwidth for a node.
+	temp_value = iloc.value;
+	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
+	node_result->max = temp_result;
+
 	iloc.value = indivi.min;
 	iloc.rank = prank;
 	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, MPI_COMM_WORLD);
 	result->min = rloc.value;
+
+	// Get the total min value summed across all processes in a node to enable calculation
+	// of the maximum bandwidth for a node.
+	temp_value = iloc.value;
+	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
+	node_result->min = temp_result;
 
 }
 
