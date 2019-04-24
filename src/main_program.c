@@ -9,7 +9,7 @@ int main(int argc, char **argv){
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
-	benchmark_results node_results;
+	aggregate_results node_results;
 	aggregate_results a_results;
 
 	MPI_Init(&argc, &argv);
