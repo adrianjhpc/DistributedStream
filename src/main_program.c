@@ -4,7 +4,6 @@ int main(int argc, char **argv){
 
 	int prank, psize;
 	int node_size, node_rank;
-	char procname[MPI_MAX_PROCESSOR_NAME];
 	int node_comm, node_key;
 	int omp_thread_num;
 	int array_size;
@@ -16,10 +15,17 @@ int main(int argc, char **argv){
 	MPI_Comm_size(MPI_COMM_WORLD, &psize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
-	node_key = get_key(procname);
+	// Get a integer key for this process that is different for every node
+	// a process is run on.
+	node_key = get_key();
 
+	// Use the node key to split the MPI_COMM_WORLD communicator
+	// to produce a communicator per node, containing all the processes
+	// running on a given node.
 	MPI_Comm_split(MPI_COMM_WORLD,node_key,0,&node_comm);
 
+	// Get the rank and size of the node communicator this process is involved
+	// in.
 	MPI_Comm_size(node_comm, &node_size);
 	MPI_Comm_rank(node_comm, &node_rank);
 
@@ -263,12 +269,14 @@ int name_to_colour(const char *name){
 	return res;
 }
 
-int get_key(char *name){
+// Get an integer key for a process based on the name of the
+// node this process is running on. This is useful for creating
+// communicators for all the processes running on a node.
+int get_key(){
 
+	char name[MPI_MAX_PROCESSOR_NAME];
 	int len;
 	int lpar_key;
-	int cpu;
-	int core;
 	int rank;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
