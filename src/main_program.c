@@ -5,6 +5,8 @@ int main(int argc, char **argv){
 	int prank, psize;
 	int node_size, node_rank;
 	int node_comm, node_key;
+	int root_comm;
+	int root_size, root_rank;
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
@@ -28,6 +30,16 @@ int main(int argc, char **argv){
 	// in.
 	MPI_Comm_size(node_comm, &node_size);
 	MPI_Comm_rank(node_comm, &node_rank);
+
+	// Now create a communicator that goes across nodes. The functionality below will
+	// create a communicator per rank on a node (i.e. one containing all the rank 0 processes
+	// in the node communicators, one containing all the rank 1 processes in the
+	// node communicators, etc...), although we are really only doing this to enable
+	// all the rank 0 processes in the node communicators to undertake collective operations.
+    MPI_Comm_split(MPI_COMM_WORLD,node_rank,0,&root_comm);
+
+    MPI_Comm_size(root_comm, &root_size);
+    MPI_Comm_rank(root_comm, &root_rank);
 
 	initialise_benchmark_results(&b_results);
 
