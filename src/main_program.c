@@ -27,7 +27,7 @@ int main(int argc, char **argv){
 	initialise_benchmakr_results(&node_results);
 
 	stream_memory_task(&b_results, psize, prank, node_size, &array_size);
-	collect_results(b_results, &a_results, psize, prank, node_comm, node_size, node_rank);
+	collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank);
 
 	if(prank == ROOT){
 		print_results(a_results, psize, array_size, node_size);
@@ -36,7 +36,7 @@ int main(int argc, char **argv){
 	/*initialise_benchmark_results(&b_results);
 
         stream_persistent_memory_task(&b_results, psize, prank, node_size, &array_size);
-        collect_results(b_results, &a_results, psize, prank, node_comm, node_size, node_rank);
+        collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank);
 
         if(prank == ROOT){
 		printf("Stream Persistent Memory Results");
