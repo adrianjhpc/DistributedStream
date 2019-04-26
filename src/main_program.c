@@ -3,7 +3,8 @@
 int main(int argc, char **argv){
 
 	int temp_size, temp_rank;
-	int temp_comm, node_key;
+	MPI_Comm temp_comm
+	int node_key;
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
@@ -26,7 +27,7 @@ int main(int argc, char **argv){
 	// Use the node key to split the MPI_COMM_WORLD communicator
 	// to produce a communicator per node, containing all the processes
 	// running on a given node.
-	MPI_Comm_split(world_comm->comm,node_key,0,&temp_comm);
+	MPI_Comm_split(world_comm.comm, node_key, 0, &temp_comm);
 
 	// Get the rank and size of the node communicator this process is involved
 	// in.
@@ -42,7 +43,7 @@ int main(int argc, char **argv){
 	// in the node communicators, one containing all the rank 1 processes in the
 	// node communicators, etc...), although we are really only doing this to enable
 	// all the rank 0 processes in the node communicators to undertake collective operations.
-    MPI_Comm_split(world_comm->comm,node_comm.rank,0,&temp_comm);
+    MPI_Comm_split(world_comm.comm, node_comm.rank, 0, &temp_comm);
 
     MPI_Comm_size(temp_comm, &temp_size);
     MPI_Comm_rank(temp_comm, &temp_rank);

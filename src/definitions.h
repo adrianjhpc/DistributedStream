@@ -24,7 +24,7 @@
 #define MAX_FILE_NAME_LENGTH 500
 
 typedef struct communicator {
-	int comm;
+	MPI_Comm comm;
 	int rank;
 	int size;
 
