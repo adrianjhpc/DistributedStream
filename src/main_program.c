@@ -220,7 +220,7 @@ void print_results(aggregate_results a_results, communicator world_comm, int arr
 		omp_thread_num = omp_get_num_threads();
 	}
 
-	printf("Running with %d MPI processes, each with %d OpenMP threads. %d processes per node\n", world_commm.size, omp_thread_num, node_comm.size);
+	printf("Running with %d MPI processes, each with %d OpenMP threads. %d processes per node\n", world_comm.size, omp_thread_num, node_comm.size);
 	printf("Benchmark   Average Bandwidth    Avg Time    Max Bandwidth   Min Time    Min Bandwidth   Max Time   Max Time Location\n");
 	printf("                  (GB/s)         (seconds)       (GB/s)      (seconds)       (GB/s)      (seconds)      (proc name)\n");
 	printf("----------------------------------------------------------------------------------------------------------------------\n");
