@@ -44,7 +44,7 @@ int main(int argc, char **argv){
 	initialise_benchmark_results(&b_results);
 
 	stream_memory_task(&b_results, psize, prank, node_size, &array_size);
-	collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank);
+	collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
 
 	if(prank == ROOT){
 		print_results(a_results, psize, array_size, node_size);
@@ -53,7 +53,7 @@ int main(int argc, char **argv){
 	/*initialise_benchmark_results(&b_results);
 
         stream_persistent_memory_task(&b_results, psize, prank, node_size, &array_size);
-        collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank);
+        collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
 
         if(prank == ROOT){
 		printf("Stream Persistent Memory Results");
@@ -65,16 +65,16 @@ int main(int argc, char **argv){
 
 }
 
-void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, int psize, int prank, int node_comm, int node_size, int node_rank){
+void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, int psize, int prank, int node_comm, int node_size, int node_rank, int root_rank, int root_size, int root_rank){
 
-	collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
-	collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
-	collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
-	collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, psize, prank, b_results.name, node_comm, node_size, node_rank);
+	collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
+	collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
+	collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
+	collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
 
 }
 
-void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, int psize, int prank, char *name, int node_comm, int node_size, int node_rank){
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, int psize, int prank, char *name, int node_comm, int node_size, int node_rank, int root_rank, int root_size, int root_rank){
 
 	// Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
 	// This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
@@ -106,6 +106,14 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
 	node_result->avg = temp_result;
 
+	if(node_rank == root){
+		temp_value = node_result->avg;
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, root_comm);
+		if(prank == root){
+			result->avg = temp_result/node_size;
+		}
+	}
+
 	iloc.value = indivi.max;
 	iloc.rank = prank;
 	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
@@ -128,6 +136,15 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
 	node_result->max = temp_result;
 
+	// Get the total max value across all the nodes
+	if(node_rank == root){
+		temp_value = node_result->max;
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, root_comm);
+		if(prank == root){
+			result->max = temp_result;
+		}
+	}
+
 	iloc.value = indivi.min;
 	iloc.rank = prank;
 	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, MPI_COMM_WORLD);
@@ -138,6 +155,16 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	temp_value = iloc.value;
 	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
 	node_result->min = temp_result;
+
+	// Get the total min value across all the nodes
+	if(node_rank == root){
+		temp_value = node_result->min;
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, root_comm);
+		if(prank == root){
+			result->min = temp_result;
+		}
+	}
+
 
 }
 
