@@ -81,13 +81,13 @@ static char	*label[4] = {"Copy:      ", "Scale:     ",
 
 static double mysecond();
 static void checkSTREAMresults(int array_size);
-
+static int checktick();
 #ifdef _OPENMP
 extern int omp_get_num_threads();
 #endif
 
 int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size){
-	int			quantum, checktick();
+	int			quantum;
 	int			BytesPerWord;
 	int			k;
 	ssize_t		j;

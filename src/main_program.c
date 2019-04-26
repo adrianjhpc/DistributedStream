@@ -12,12 +12,12 @@ int main(int argc, char **argv){
 	communicator world_comm, node_comm, root_comm;
 
 	MPI_Init(&argc, &argv);
-	MPI_Comm_size(MPI_COMM_WORLD, &psize);
-	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
+	MPI_Comm_size(MPI_COMM_WORLD, &temp_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
 	world_comm.comm = MPI_COMM_WORLD;
-	world_comm.rank = prank;
-	world_comm.size = psize;
+	world_comm.rank = temp_rank;
+	world_comm.size = temp_size;
 
 	// Get a integer key for this process that is different for every node
 	// a process is run on.
@@ -26,7 +26,7 @@ int main(int argc, char **argv){
 	// Use the node key to split the MPI_COMM_WORLD communicator
 	// to produce a communicator per node, containing all the processes
 	// running on a given node.
-	MPI_Comm_split(world_comm.comm,node_key,0,&temp_comm);
+	MPI_Comm_split(world_comm->comm,node_key,0,&temp_comm);
 
 	// Get the rank and size of the node communicator this process is involved
 	// in.
@@ -42,7 +42,7 @@ int main(int argc, char **argv){
 	// in the node communicators, one containing all the rank 1 processes in the
 	// node communicators, etc...), although we are really only doing this to enable
 	// all the rank 0 processes in the node communicators to undertake collective operations.
-    MPI_Comm_split(world_comm.comm,node_comm.rank,0,&temp_comm);
+    MPI_Comm_split(world_comm->comm,node_comm.rank,0,&temp_comm);
 
     MPI_Comm_size(temp_comm, &temp_size);
     MPI_Comm_rank(temp_comm, &temp_rank);
@@ -215,7 +215,7 @@ void print_results(aggregate_results a_results, communicator world_comm, int arr
 
 
 #pragma omp parallel default(shared)
-	{f
+	{
 		omp_thread_num = omp_get_num_threads();
 	}
 
