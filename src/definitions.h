@@ -6,6 +6,9 @@
 #include <float.h>
 #include <string.h>
 #include <sys/sysinfo.h>
+#if defined(__aarch64__)
+#include <sys/syscall.h>
+#endif
 
 
 
