@@ -21,7 +21,7 @@ int main(int argc, char **argv){
 
 	// Get a integer key for this process that is different for every node
 	// a process is run on.
-	node_key = get_key(world_commm);
+	node_key = get_key(world_comm);
 
 	// Use the node key to split the MPI_COMM_WORLD communicator
 	// to produce a communicator per node, containing all the processes
