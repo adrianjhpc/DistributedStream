@@ -257,25 +257,25 @@ void print_results(aggregate_results a_results, aggregate_results node_results, 
 	bandwidth_avg = ((1.0E-06 * copy_size * node_comm.size)/node_results.Copy.avg);
 	bandwidth_max = ((1.0E-06 * copy_size * node_comm.size)/node_results.Copy.min);
 	bandwidth_min = ((1.0E-06 * copy_size * node_comm.size)/node_results.Copy.max);
-	printf("Node Copy:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, a_results.Copy.avg, bandwidth_max, a_results.Copy.min, bandwidth_min, a_results.Copy.max, a_results.copy_max);
+	printf("Node Copy:  %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, node_results.Copy.avg, bandwidth_max, node_results.Copy.min, bandwidth_min, node_results.Copy.max, node_results.copy_max);
 
 	// Calculate the node bandwidths.
 	bandwidth_avg = ((1.0E-06 * copy_size * node_comm.size)/node_results.Scale.avg);
 	bandwidth_max = ((1.0E-06 * copy_size * node_comm.size)/node_results.Scale.min);
 	bandwidth_min = ((1.0E-06 * copy_size * node_comm.size)/node_results.Scale.max);
-	printf("Node Scale: %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, a_results.Scale.avg, bandwidth_max, a_results.Scale.min, bandwidth_min, a_results.Scale.max, a_results.scale_max);
+	printf("Node Scale: %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, node_results.Scale.avg, bandwidth_max, node_results.Scale.min, bandwidth_min, node_results.Scale.max, node_results.scale_max);
 
 	// Calculate the node bandwidths.
 	bandwidth_avg = ((1.0E-06 * copy_size * node_comm.size)/node_results.Add.avg);
 	bandwidth_max = ((1.0E-06 * copy_size * node_comm.size)/node_results.Add.min);
 	bandwidth_min = ((1.0E-06 * copy_size * node_comm.size)/node_results.Add.max);
-	printf("Node Add:   %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, a_results.Add.avg, bandwidth_max, a_results.Add.min, bandwidth_min, a_results.Add.max, a_results.add_max);
+	printf("Node Add:   %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, node_results.Add.avg, bandwidth_max, node_results.Add.min, bandwidth_min, node_results.Add.max, node_results.add_max);
 
 	// Calculate the node bandwidths.
 	bandwidth_avg = ((1.0E-06 * copy_size * node_comm.size)/node_results.Triad.avg);
 	bandwidth_max = ((1.0E-06 * copy_size * node_comm.size)/node_results.Triad.min);
 	bandwidth_min = ((1.0E-06 * copy_size * node_comm.size)/node_results.Triad.max);
-	printf("Node Triad: %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, a_results.Triad.avg, bandwidth_max, a_results.Triad.min, bandwidth_min, a_results.Triad.max, a_results.triad_max);
+	printf("Node Triad: %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f   %s\n", bandwidth_avg, node_results.Triad.avg, bandwidth_max, node_results.Triad.min, bandwidth_min, node_results.Triad.max, node_results.triad_max);
 
 }
 
