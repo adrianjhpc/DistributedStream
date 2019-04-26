@@ -79,7 +79,7 @@ extern int omp_get_num_threads();
 STREAM_TYPE	*a, *b, *c;
 
 
-int stream_memory_task(benchmark_results *b_results, int psize, int prank, int node_size, int *array_size){
+int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
@@ -87,7 +87,7 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
 
-	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
+	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_comm.size;
 
 	a = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
 	b = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
@@ -98,7 +98,7 @@ int stream_memory_task(benchmark_results *b_results, int psize, int prank, int n
 	BytesPerWord = sizeof(STREAM_TYPE);
 
 
-	if(prank == ROOT){
+	if(world_comm.rank == ROOT){
 		printf("Stream Memory Task\n");
 		printf("This system uses %d bytes per array element.\n",BytesPerWord);
 		printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) *array_size, OFFSET);

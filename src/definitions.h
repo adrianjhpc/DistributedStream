@@ -23,6 +23,13 @@
 #define ROOT 0
 #define MAX_FILE_NAME_LENGTH 500
 
+typedef struct communicator {
+	int comm;
+	int rank;
+	int size;
+
+} communicator;
+
 typedef struct performance_result {
 	double avg;
 	double min;
@@ -48,9 +55,10 @@ typedef struct aggregate_results {
 	char triad_max[MPI_MAX_PROCESSOR_NAME];
 } aggregate_results;
 
-int stream_memory_task(benchmark_results *b_results, int psize, int prank, int node_size, int *array_size);
-int stream_persistent_memory_task(benchmark_results *b_results, int psize, int prank, int node_size, int *array_size);
-void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, int psize, int prank, int node_comm, int node_size, int node_rank, int root_rank, int root_size, int root_rank);
+int get_key(communicator world_comm);
+int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
+void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
 void initialise_benchmark_results(benchmark_results *b_results);
-void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, int psize, int prank, char *name, int node_comm, int node_size, int node_rank, int root_rank, int root_size, int root_rank);
-void print_results(aggregate_results a_results, int psize, int array_size, int processes_per_node);
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm);
+void print_results(aggregate_results a_results, communicator world_comm, int array_size, communicator node_comm);

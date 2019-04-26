@@ -86,7 +86,7 @@ static void checkSTREAMresults(int array_size);
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, int psize, int prank, int node_size, int *array_size){
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size){
 	int			quantum, checktick();
 	int			BytesPerWord;
 	int			k;
@@ -94,7 +94,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	STREAM_TYPE		scalar;
 	double		t, times[4][NTIMES];
 
-	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_size;
+	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_comm.size;
 
 	/* --- SETUP --- determine precision and check timing --- */
 
@@ -121,7 +121,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	//printf(" The *best* time for each kernel (excluding the first iteration)\n");
 	//printf(" will be used to compute the reported bandwidth.\n");
 
-	if(prank == ROOT){
+	if(world_comm.rank == ROOT){
 		printf("Stream Persistent Memory Task\n");
 	}
 
@@ -146,7 +146,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, int psize, int p
 	strcpy(path,"/mnt/pmem_fsdax0/");
 	// The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
 	sprintf(path+strlen(path), "pstream_test_file");
-	sprintf(path+strlen(path), "%d", prank);
+	sprintf(path+strlen(path), "%d", world_comm.rank);
 
 	if ((pmemaddr = pmem_map_file(path, (*array_size+OFFSET)*BytesPerWord*3,
 			PMEM_FILE_CREATE|PMEM_FILE_EXCL,

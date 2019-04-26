@@ -2,62 +2,72 @@
 
 int main(int argc, char **argv){
 
-	int prank, psize;
-	int node_size, node_rank;
-	int node_comm, node_key;
-	int root_comm;
-	int root_size, root_rank;
+	int temp_size, temp_rank;
+	int temp_comm, node_key;
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
 	aggregate_results node_results;
 	aggregate_results a_results;
+	communicator world_comm, node_comm, root_comm;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &psize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
+	world_comm.comm = MPI_COMM_WORLD;
+	world_comm.rank = prank;
+	world_comm.size = psize;
+
 	// Get a integer key for this process that is different for every node
 	// a process is run on.
-	node_key = get_key();
+	node_key = get_key(world_commm);
 
 	// Use the node key to split the MPI_COMM_WORLD communicator
 	// to produce a communicator per node, containing all the processes
 	// running on a given node.
-	MPI_Comm_split(MPI_COMM_WORLD,node_key,0,&node_comm);
+	MPI_Comm_split(world_comm.comm,node_key,0,&temp_comm);
 
 	// Get the rank and size of the node communicator this process is involved
 	// in.
-	MPI_Comm_size(node_comm, &node_size);
-	MPI_Comm_rank(node_comm, &node_rank);
+	MPI_Comm_size(temp_comm, &temp_size);
+	MPI_Comm_rank(temp_comm, &temp_rank);
+
+	node_comm.comm = temp_comm;
+	node_comm.rank = temp_rank;
+	node_comm.size = temp_size;
 
 	// Now create a communicator that goes across nodes. The functionality below will
 	// create a communicator per rank on a node (i.e. one containing all the rank 0 processes
 	// in the node communicators, one containing all the rank 1 processes in the
 	// node communicators, etc...), although we are really only doing this to enable
 	// all the rank 0 processes in the node communicators to undertake collective operations.
-    MPI_Comm_split(MPI_COMM_WORLD,node_rank,0,&root_comm);
+    MPI_Comm_split(world_comm.comm,node_comm.rank,0,&temp_comm);
 
-    MPI_Comm_size(root_comm, &root_size);
-    MPI_Comm_rank(root_comm, &root_rank);
+    MPI_Comm_size(temp_comm, &temp_size);
+    MPI_Comm_rank(temp_comm, &temp_rank);
+
+	root_comm.comm = temp_comm;
+	root_comm.rank = temp_rank;
+	root_comm.size = temp_size;
 
 	initialise_benchmark_results(&b_results);
 
-	stream_memory_task(&b_results, psize, prank, node_size, &array_size);
-	collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
+	stream_memory_task(&b_results, world_comm, node_comm, &array_size);
+	collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
-	if(prank == ROOT){
-		print_results(a_results, psize, array_size, node_size);
+	if(world_comm.rank == ROOT){
+		print_results(a_results, world_comm, array_size, node_comm);
 	}
 
 	/*initialise_benchmark_results(&b_results);
 
-        stream_persistent_memory_task(&b_results, psize, prank, node_size, &array_size);
-        collect_results(b_results, &a_results, &node_results, psize, prank, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
+        stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size);
+        collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
-        if(prank == ROOT){
+        if(world_comm.rank == ROOT){
 		printf("Stream Persistent Memory Results");
-                print_results(a_results, psize, array_size, node_size);
+                print_results(a_results, world_comm, array_size, node_comm);
         }
 	 */
 
@@ -65,16 +75,16 @@ int main(int argc, char **argv){
 
 }
 
-void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, int psize, int prank, int node_comm, int node_size, int node_rank, int root_rank, int root_size, int root_rank){
+void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm){
 
-	collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
-	collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
-	collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
-	collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, psize, prank, b_results.name, node_comm, node_size, node_rank, root_comm, root_size, root_rank);
+	collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, b_results.name, world_comm, node_comm, root_comm);
+	collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max,  b_results.name, world_comm, node_comm, root_comm);
+	collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, b_results.name, world_comm, node_comm, root_comm);
+	collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, b_results.name, world_comm, node_comm, root_comm);
 
 }
 
-void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, int psize, int prank, char *name, int node_comm, int node_size, int node_rank, int root_rank, int root_size, int root_rank){
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm){
 
 	// Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
 	// This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
@@ -95,37 +105,37 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	int root = ROOT;
 	MPI_Status status;
 
-	MPI_Reduce(&indivi.avg, &result->avg, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
-	if(prank == root){
-		result->avg = result->avg/psize;
+	MPI_Reduce(&indivi.avg, &result->avg, 1, MPI_DOUBLE, MPI_SUM, root, world_comm.comm);
+	if(world_comm.rank == root){
+		result->avg = result->avg/world_comm.size;
 	}
 
 	// Get the total avg value summed across all processes in a node to enable calculation
 	// of the avg bandwidth for a node.
 	temp_value = indivi.avg;
-	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
+	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
 	node_result->avg = temp_result;
 
-	if(node_rank == root){
+	if(node_comm.rank == root){
 		temp_value = node_result->avg;
-		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, root_comm);
-		if(prank == root){
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, root_comm.comm);
+		if(world_comm.rank == root){
 			result->avg = temp_result/node_size;
 		}
 	}
 
 	iloc.value = indivi.max;
-	iloc.rank = prank;
-	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
-	if(rloc.rank == prank && rloc.value != indivi.max){
+	iloc.rank = world_comm.rank;
+	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MAXLOC, world_comm.comm);
+	if(rloc.rank == world_comm.rank && rloc.value != indivi.max){
 		printf("Error with the output of MPI_MAXLOC reduction");
 	}
 	result->max = rloc.value;
 	// Communicate which node has the biggest max value so outlier nodes can be identified
-	if(rloc.rank == prank && rloc.rank != root){
-		MPI_Ssend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, MPI_COMM_WORLD);
-	}else if(prank == root && rloc.rank != root){
-		MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0, MPI_COMM_WORLD, &status);
+	if(rloc.rank == world_comm.rank && rloc.rank != root){
+		MPI_Ssend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, world_comm.comm);
+	}else if(world_comm.rank == root && rloc.rank != root){
+		MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0, world_comm.comm, &status);
 	}else if(rloc.rank == root){
 		strcpy(max_name, name);
 	}
@@ -133,34 +143,34 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	// Get the total max value summed across all processes in a node to enable calculation
 	// of the minimum bandwidth for a node.
 	temp_value = iloc.value;
-	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
+	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
 	node_result->max = temp_result;
 
 	// Get the total max value across all the nodes
-	if(node_rank == root){
+	if(node_comm.rank == root){
 		temp_value = node_result->max;
-		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, root_comm);
-		if(prank == root){
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, root_comm.comm);
+		if(world_comm.rank == root){
 			result->max = temp_result;
 		}
 	}
 
 	iloc.value = indivi.min;
-	iloc.rank = prank;
-	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, MPI_COMM_WORLD);
+	iloc.rank = world_comm.rank;
+	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, world_comm.comm);
 	result->min = rloc.value;
 
 	// Get the total min value summed across all processes in a node to enable calculation
 	// of the maximum bandwidth for a node.
 	temp_value = iloc.value;
-	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm);
+	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
 	node_result->min = temp_result;
 
 	// Get the total min value across all the nodes
-	if(node_rank == root){
+	if(node_comm.rank == root){
 		temp_value = node_result->min;
-		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, root_comm);
-		if(prank == root){
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, root_comm.comm);
+		if(world_comm.rank == root){
 			result->min = temp_result;
 		}
 	}
@@ -194,7 +204,7 @@ void initialise_benchmark_results(benchmark_results *b_results){
 // be called from the root process as the overall design is that
 // only the root process (the process which has ROOT rank) will
 // have this data.
-void print_results(aggregate_results a_results, int psize, int array_size, int processes_per_node){
+void print_results(aggregate_results a_results, communicator world_comm, int array_size, communicator node_comm){
 
 	int omp_thread_num;
 	double bandwidth_avg, bandwidth_max, bandwidth_min;
@@ -205,11 +215,11 @@ void print_results(aggregate_results a_results, int psize, int array_size, int p
 
 
 #pragma omp parallel default(shared)
-	{
+	{f
 		omp_thread_num = omp_get_num_threads();
 	}
 
-	printf("Running with %d MPI processes, each with %d OpenMP threads. %d processes per node\n", psize, omp_thread_num, processes_per_node);
+	printf("Running with %d MPI processes, each with %d OpenMP threads. %d processes per node\n", world_commm.size, omp_thread_num, node_comm.size);
 	printf("Benchmark   Average Bandwidth    Avg Time    Max Bandwidth   Min Time    Min Bandwidth   Max Time   Max Time Location\n");
 	printf("                  (GB/s)         (seconds)       (GB/s)      (seconds)       (GB/s)      (seconds)      (proc name)\n");
 	printf("----------------------------------------------------------------------------------------------------------------------\n");
@@ -311,14 +321,14 @@ int name_to_colour(const char *name){
 // Get an integer key for a process based on the name of the
 // node this process is running on. This is useful for creating
 // communicators for all the processes running on a node.
-int get_key(){
+int get_key(communicator world_comm){
 
 	char name[MPI_MAX_PROCESSOR_NAME];
 	int len;
 	int lpar_key;
 	int rank;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(world_comm.comm, &rank);
 	MPI_Get_processor_name(name, &len);
 	lpar_key = name_to_colour(name);
 
