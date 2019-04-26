@@ -152,7 +152,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 		temp_value = node_result->max;
 		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, root_comm.comm);
 		if(world_comm.rank == root){
-			result->max = temp_result;
+			node_result->max = temp_result;
 		}
 	}
 
