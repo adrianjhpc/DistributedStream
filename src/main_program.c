@@ -22,7 +22,7 @@ int main(int argc, char **argv){
 
 	// Get a integer key for this process that is different for every node
 	// a process is run on.
-	node_key = get_key(world_comm);
+	node_key = get_key();
 
 	// Use the node key to split the MPI_COMM_WORLD communicator
 	// to produce a communicator per node, containing all the processes
@@ -322,14 +322,12 @@ int name_to_colour(const char *name){
 // Get an integer key for a process based on the name of the
 // node this process is running on. This is useful for creating
 // communicators for all the processes running on a node.
-int get_key(communicator world_comm){
+int get_key(){
 
 	char name[MPI_MAX_PROCESSOR_NAME];
 	int len;
 	int lpar_key;
-	int rank;
 
-	MPI_Comm_rank(world_comm.comm, &rank);
 	MPI_Get_processor_name(name, &len);
 	lpar_key = name_to_colour(name);
 

@@ -60,7 +60,7 @@ typedef struct aggregate_results {
 	char triad_max[MPI_MAX_PROCESSOR_NAME];
 } aggregate_results;
 
-int get_key(communicator world_comm);
+int get_key();
 int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
 int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
 void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
