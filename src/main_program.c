@@ -43,10 +43,10 @@ int main(int argc, char **argv){
 	// in the node communicators, one containing all the rank 1 processes in the
 	// node communicators, etc...), although we are really only doing this to enable
 	// all the rank 0 processes in the node communicators to undertake collective operations.
-    MPI_Comm_split(world_comm.comm, node_comm.rank, 0, &temp_comm);
+	MPI_Comm_split(world_comm.comm, node_comm.rank, 0, &temp_comm);
 
-    MPI_Comm_size(temp_comm, &temp_size);
-    MPI_Comm_rank(temp_comm, &temp_rank);
+	MPI_Comm_size(temp_comm, &temp_size);
+	MPI_Comm_rank(temp_comm, &temp_rank);
 
 	root_comm.comm = temp_comm;
 	root_comm.rank = temp_rank;
@@ -305,27 +305,39 @@ unsigned long get_processor_and_core(int *chip, int *core)
 }
 #endif
 
+// The routine convert a string (name) into a number
+// for use in a MPI_Comm_split call (where the number is
+// known as a colour). It is effectively a hashing function
+// for strings but is not necessarily robust (i.e. does not
+// guarantee it is collision free) for all strings, but it
+// should be reasonable for strings that different by small
+// amounts (i.e the name of nodes where they different by a
+// number of set of numbers and letters, for instance
+// login01,login02..., or cn01q94,cn02q43, etc...)
 int name_to_colour(const char *name){
 	int res;
 	int multiplier = 131;
 	const char *p;
-	// If the string is too long, using 131 as a multiplier can
-	// end up with integer overflow, so reduce the multiplier.
-	if(strlen(name) > 8){
-		multiplier = 57;
-	}
-	res =0;
-	for(p=name; *p ; p++){
-		res = (multiplier*res) + *p;
-	}
 
+	res = 0;
+	for(p=name; *p ; p++){
+		// Guard against integer overflow.
+		if (multiplier > 0 && (res + *p) > (INT_MAX / multiplier)) {
+			// If overflow looks likely (due to the calculation above) then
+			// simply flip the result to make it negative
+			res = -res;
+		}else{
+			// If overflow is not going to happen then undertake the calculation
+			res = (multiplier*res);
+		}
+		// Add on the new character here.
+		res = res + *p;
+	}
+	// If we have ended up with a negative result, invert it to make it positive because
+	// the functionality (in MPI) that we will use this for requires the int to be positive.
 	if( res < 0 ){
 		res = -res;
 	}
-	if(res < 0){
-		printf("Error converting the name to colour for splitting communicators. Looks like integer overflow has occurred.\n");
-	}
-
 	return res;
 }
 
