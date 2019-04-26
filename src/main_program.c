@@ -307,15 +307,25 @@ unsigned long get_processor_and_core(int *chip, int *core)
 
 int name_to_colour(const char *name){
 	int res;
+	int multiplier = 131;
 	const char *p;
+	// If the string is too long, using 131 as a multiplier can
+	// end up with integer overflow, so reduce the multiplier.
+	if(strlen(name) > 8){
+		multiplier = 57;
+	}
 	res =0;
 	for(p=name; *p ; p++){
-		res = (131*res) + *p;
+		res = (multiplier*res) + *p;
 	}
 
 	if( res < 0 ){
 		res = -res;
 	}
+	if(res < 0){
+		printf("Error converting the name to colour for splitting communicators. Looks like integer overflow has occurred.\n");
+	}
+
 	return res;
 }
 
