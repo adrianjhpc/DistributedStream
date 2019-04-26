@@ -3,7 +3,7 @@
 int main(int argc, char **argv){
 
 	int temp_size, temp_rank;
-	MPI_Comm temp_comm
+	MPI_Comm temp_comm;
 	int node_key;
 	int omp_thread_num;
 	int array_size;
