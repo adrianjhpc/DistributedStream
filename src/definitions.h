@@ -66,4 +66,4 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
 void initialise_benchmark_results(benchmark_results *b_results);
 void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm);
-void print_results(aggregate_results a_results, communicator world_comm, int array_size, communicator node_comm);
+void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm);
