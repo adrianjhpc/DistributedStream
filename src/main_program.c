@@ -172,7 +172,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 		temp_value = node_result->min;
 		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, root_comm.comm);
 		if(world_comm.rank == root){
-			result->min = temp_result;
+			node_result->min = temp_result;
 		}
 	}
 
