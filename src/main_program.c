@@ -38,6 +38,8 @@ int main(int argc, char **argv){
 	node_comm.rank = temp_rank;
 	node_comm.size = temp_size;
 
+	printf("%d node %d %d \n", world_comm.rank, node_comm.rank, node_comm.size);
+
 	// Now create a communicator that goes across nodes. The functionality below will
 	// create a communicator per rank on a node (i.e. one containing all the rank 0 processes
 	// in the node communicators, one containing all the rank 1 processes in the
