@@ -276,7 +276,7 @@ void print_results(aggregate_results a_results, aggregate_results node_results, 
 	bandwidth_max = ((1.0E-06 * triad_size)/node_results.Triad.min) * node_comm.size;
 	bandwidth_min = ((1.0E-06 * triad_size)/node_results.Triad.max) * node_comm.size;
 	printf("Node Triad: %12.1f:   %11.6f:  %12.1f:   %11.6f:   %12.1f:   %11.6f\n", bandwidth_avg, node_results.Triad.avg, bandwidth_max, node_results.Triad.min, bandwidth_min, node_results.Triad.max);
-
+	printf("Node comm sizde %d\n",node_comm.size);
 }
 
 // The routine convert a string (name) into a number
