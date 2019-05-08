@@ -38,8 +38,6 @@ int main(int argc, char **argv){
 	node_comm.rank = temp_rank;
 	node_comm.size = temp_size;
 
-	printf("%d %d node %d %d \n", node_key, world_comm.rank, node_comm.rank, node_comm.size);
-
 	// Now create a communicator that goes across nodes. The functionality below will
 	// create a communicator per rank on a node (i.e. one containing all the rank 0 processes
 	// in the node communicators, one containing all the rank 1 processes in the
@@ -221,7 +219,6 @@ void print_results(aggregate_results a_results, aggregate_results node_results, 
 	{
 		omp_thread_num = omp_get_num_threads();
 	}
-
 	printf("Running with %d MPI processes, each with %d OpenMP threads. %d processes per node\n", world_comm.size, omp_thread_num, node_comm.size);
 	printf("Benchmark   Average Bandwidth    Avg Time    Max Bandwidth   Min Time    Min Bandwidth   Max Time   Max Time Location\n");
 	printf("                  (GB/s)         (seconds)       (GB/s)      (seconds)       (GB/s)      (seconds)      (proc name)\n");
