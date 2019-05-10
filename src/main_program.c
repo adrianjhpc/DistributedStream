@@ -53,9 +53,9 @@ int main(int argc, char **argv){
 	root_comm.rank = temp_rank;
 	root_comm.size = temp_size;
 
-	printf("before init %ld\n",r_result);
+	printf("before init %ld\n",r_results);
 	initialise_benchmark_results(&b_results, r_results);
-	printf("after init %ld\n",r_result);
+	printf("after init %ld\n",r_results);
 
 	for(int i=0;i<NTIMES;i++){
 		printf("%d\n",i);
