@@ -55,13 +55,14 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results, &r_results);
 
+	stream_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
+	collect_results(b_results, r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
+
 	for(int i=0;i<NTIMES;i++){
 		printf("%d\n",i);
 	    printf("%d %f %f %f %f\n",i,r_results[i].copy,r_results[i].scale,r_results[i].add,r_results[i].triad);
 	}
 
-	stream_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
-	collect_results(b_results, r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
 	if(world_comm.rank == ROOT){
 //		print_results(a_results, r_results, node_results, world_comm, array_size, node_comm);
