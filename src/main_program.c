@@ -55,7 +55,7 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results, r_results);
 
-	stream_memory_task(&b_results, &r_results, world_comm, node_comm, &array_size);
+	stream_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
 	collect_results(b_results, &r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
 	if(world_comm.rank == ROOT){
@@ -64,7 +64,7 @@ int main(int argc, char **argv){
 
 	/*initialise_benchmark_results(&b_results, r_results);
 
-        stream_persistent_memory_task(&b_results, &r_results, world_comm, node_comm, &array_size);
+        stream_persistent_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
         collect_results(b_results, &r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
         if(world_comm.rank == ROOT){
