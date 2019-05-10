@@ -56,10 +56,10 @@ int main(int argc, char **argv){
 	initialise_benchmark_results(&b_results, r_results);
 
 	stream_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
-	collect_results(b_results, &r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
+	collect_results(b_results, r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
 	if(world_comm.rank == ROOT){
-		print_results(a_results, &r_results, node_results, world_comm, array_size, node_comm);
+		print_results(a_results, r_results, node_results, world_comm, array_size, node_comm);
 	}
 
 	/*initialise_benchmark_results(&b_results, r_results);
