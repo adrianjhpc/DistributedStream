@@ -71,7 +71,7 @@ static int checktick();
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size){
+int stream_persistent_memory_task(benchmark_results *b_results, raw_result *r_results, communicator world_comm, communicator node_comm, int *array_size){
 	int			quantum;
 	int			BytesPerWord;
 	int			k;

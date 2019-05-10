@@ -8,7 +8,7 @@ int main(int argc, char **argv){
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
-	raw_results *r_results;
+	raw_result *r_results;
 	aggregate_results node_results;
 	aggregate_results a_results;
 	communicator world_comm, node_comm, root_comm;
@@ -183,7 +183,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 }
 
 // Initialise the benchmark results structure to enable proper collection of data
-void initialise_benchmark_results(benchmark_results *b_results, raw_results *r_result){
+void initialise_benchmark_results(benchmark_results *b_results, raw_result *r_result){
 
 	int name_length;
 
