@@ -56,6 +56,7 @@ int main(int argc, char **argv){
 	initialise_benchmark_results(&b_results, r_results);
 
 	for(int i=0;i<NTIMES;i++){
+		printf("%d\n",i);
 	    printf("%d %f %f %f %f\n",i,r_results[i].copy,r_results[i].scale,r_results[i].add,r_results[i].triad);
 	}
 
@@ -192,7 +193,7 @@ void initialise_benchmark_results(benchmark_results *b_results, raw_result *r_re
 
 	int name_length;
 
-	r_result = malloc(NTIMES * sizeof(raw_result));
+	r_result = (*r_result)malloc(NTIMES * sizeof(raw_result));
 
 	b_results->Copy.avg = 0;
 	b_results->Copy.min = FLT_MAX;
