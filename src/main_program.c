@@ -76,8 +76,9 @@ int main(int argc, char **argv){
                 print_results(a_results, node_results, world_comm, array_size, node_comm);
         }
 	 */
-
+	printf("before freeing\n");
 	free(r_results);
+	printf("after freeing\n");
 
 	MPI_Finalize();
 
@@ -191,7 +192,6 @@ void initialise_benchmark_results(benchmark_results *b_results, raw_result *r_re
 
 	int name_length;
 
-	printf("%d %d %d\n",NTIMES, sizeof(raw_result),NTIMES*sizeof(raw_result));
 	r_result = malloc(NTIMES * sizeof(raw_result));
 
 	b_results->Copy.avg = 0;
