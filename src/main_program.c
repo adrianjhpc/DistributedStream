@@ -8,6 +8,7 @@ int main(int argc, char **argv){
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
+	raw_results *r_results;
 	aggregate_results node_results;
 	aggregate_results a_results;
 	communicator world_comm, node_comm, root_comm;
@@ -52,25 +53,27 @@ int main(int argc, char **argv){
 	root_comm.rank = temp_rank;
 	root_comm.size = temp_size;
 
-	initialise_benchmark_results(&b_results);
+	initialise_benchmark_results(&b_results, &r_results);
 
-	stream_memory_task(&b_results, world_comm, node_comm, &array_size);
-	collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
+	stream_memory_task(&b_results, &r_results, world_comm, node_comm, &array_size);
+	collect_results(b_results, &r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
 	if(world_comm.rank == ROOT){
-		print_results(a_results, node_results, world_comm, array_size, node_comm);
+		print_results(a_results, &r_results, node_results, world_comm, array_size, node_comm);
 	}
 
-	/*initialise_benchmark_results(&b_results);
+	/*initialise_benchmark_results(&b_results, &r_results);
 
-        stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size);
-        collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
+        stream_persistent_memory_task(&b_results, &r_results, world_comm, node_comm, &array_size);
+        collect_results(b_results, &r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
         if(world_comm.rank == ROOT){
 		printf("Stream Persistent Memory Results");
                 print_results(a_results, node_results, world_comm, array_size, node_comm);
         }
 	 */
+
+	free(r_results);
 
 	MPI_Finalize();
 
@@ -180,9 +183,11 @@ void collect_individual_result(performance_result indivi, performance_result *re
 }
 
 // Initialise the benchmark results structure to enable proper collection of data
-void initialise_benchmark_results(benchmark_results *b_results){
+void initialise_benchmark_results(benchmark_results *b_results, raw_results *r_result){
 
 	int name_length;
+
+	r_result = malloc(NTIMES * size(r_result));
 
 	b_results->Copy.avg = 0;
 	b_results->Copy.min = FLT_MAX;

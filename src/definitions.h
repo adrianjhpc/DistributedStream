@@ -10,8 +10,6 @@
 #include <sys/syscall.h>
 #endif
 
-
-
 #ifndef STREAM_TYPE
 #define STREAM_TYPE double
 #endif
@@ -23,7 +21,23 @@
 # define MAX(x,y) ((x)>(y)?(x):(y))
 # endif
 
-
+/*  STREAM runs each kernel "NTIMES" times and reports the *best* result
+ *         for any iteration after the first, therefore the minimum value
+ *         for NTIMES is 2.
+ *      There are no rules on maximum allowable values for NTIMES, but
+ *         values larger than the default are unlikely to noticeably
+ *         increase the reported performance.
+ *      NTIMES can also be set on the compile line without changing the source
+ *         code using, for example, "-DNTIMES=7".
+ */
+#ifdef NTIMES
+#if NTIMES<=1
+#   define NTIMES	10
+#endif
+#endif
+#ifndef NTIMES
+#   define NTIMES	10
+#endif
 
 #define ROOT 0
 #define MAX_FILE_NAME_LENGTH 500
@@ -32,8 +46,12 @@ typedef struct communicator {
 	MPI_Comm comm;
 	int rank;
 	int size;
-
 } communicator;
+
+typedef struct raw_result {
+	int iteration;
+	double time;
+} raw_result;
 
 typedef struct performance_result {
 	double avg;
@@ -61,9 +79,9 @@ typedef struct aggregate_results {
 } aggregate_results;
 
 int get_key();
-int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
-void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
-void initialise_benchmark_results(benchmark_results *b_results);
+int stream_memory_task(benchmark_results *b_results, raw_results *r_results, communicator world_comm, communicator node_comm, int *array_size);
+int stream_persistent_memory_task(benchmark_results *b_results, raw_results *r_results, communicator world_comm, communicator node_comm, int *array_size);
+void collect_results(benchmark_results result, raw_results *r_results, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
+void initialise_benchmark_results(benchmark_results *b_results, raw_results *raw_results);
 void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm);
-void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm);
+void print_results(aggregate_results a_results, raw_results *r_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm);
