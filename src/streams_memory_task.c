@@ -159,24 +159,28 @@ int stream_memory_task(benchmark_results *b_results, raw_result *r_results, comm
 		for (j=0; j<*array_size; j++)
 			c[j] = a[j];
 		times[0][k] = mysecond() - times[0][k];
+		r_results[k].copy = times[0][k];
 
 		times[1][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)
 			b[j] = scalar*c[j];
 		times[1][k] = mysecond() - times[1][k];
+		r_results[k].scale = times[0][k];
 
 		times[2][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)
 			c[j] = a[j]+b[j];
 		times[2][k] = mysecond() - times[2][k];
+		r_results[k].add = times[0][k];
 
 		times[3][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)
 			a[j] = b[j]+scalar*c[j];
 		times[3][k] = mysecond() - times[3][k];
+		r_results[k].triad = times[0][k];
 	}
 
 	/*	--- SUMMARY --- */

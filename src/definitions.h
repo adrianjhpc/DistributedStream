@@ -50,7 +50,10 @@ typedef struct communicator {
 
 typedef struct raw_result {
 	int iteration;
-	double time;
+	double copy;
+	double scale;
+	double add;
+	double triad;
 } raw_result;
 
 typedef struct performance_result {
