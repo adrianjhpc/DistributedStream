@@ -53,17 +53,15 @@ int main(int argc, char **argv){
 	root_comm.rank = temp_rank;
 	root_comm.size = temp_size;
 
-	printf("before init %ld\n",r_results);
 	initialise_benchmark_results(&b_results, &r_results);
-	printf("after init %ld\n",r_results);
 
 	for(int i=0;i<NTIMES;i++){
 		printf("%d\n",i);
 	    printf("%d %f %f %f %f\n",i,r_results[i].copy,r_results[i].scale,r_results[i].add,r_results[i].triad);
 	}
 
-//	stream_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
-//	collect_results(b_results, r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
+	stream_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
+	collect_results(b_results, r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
 	if(world_comm.rank == ROOT){
 //		print_results(a_results, r_results, node_results, world_comm, array_size, node_comm);
@@ -79,9 +77,7 @@ int main(int argc, char **argv){
                 print_results(a_results, node_results, world_comm, array_size, node_comm);
         }
 	 */
-	printf("before freeing\n");
 	free(r_results);
-	printf("after freeing\n");
 
 	MPI_Finalize();
 
@@ -195,9 +191,7 @@ void initialise_benchmark_results(benchmark_results *b_results, raw_result **r_r
 
 	int name_length;
 
-	printf("before %ld\n",r_result);
 	*r_result = (raw_result *)malloc(NTIMES * sizeof(raw_result));
-	printf("after %ld\n",r_result);
 
 	b_results->Copy.avg = 0;
 	b_results->Copy.min = FLT_MAX;
