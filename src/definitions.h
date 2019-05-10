@@ -49,7 +49,6 @@ typedef struct communicator {
 } communicator;
 
 typedef struct raw_result {
-	int iteration;
 	double copy;
 	double scale;
 	double add;
