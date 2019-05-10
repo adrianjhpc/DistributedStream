@@ -79,7 +79,7 @@ int main(int argc, char **argv){
 
 }
 
-void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm){
+void collect_results(benchmark_results b_results, raw_results *r_results, aggregate_results *a_results, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm){
 
 	collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, b_results.name, world_comm, node_comm, root_comm);
 	collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max,  b_results.name, world_comm, node_comm, root_comm);
