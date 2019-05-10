@@ -54,7 +54,7 @@ int main(int argc, char **argv){
 	root_comm.size = temp_size;
 
 	printf("before init %ld\n",r_results);
-	initialise_benchmark_results(&b_results, r_results);
+	initialise_benchmark_results(&b_results, &r_results);
 	printf("after init %ld\n",r_results);
 
 	for(int i=0;i<NTIMES;i++){
@@ -191,12 +191,12 @@ void collect_individual_result(performance_result indivi, performance_result *re
 }
 
 // Initialise the benchmark results structure to enable proper collection of data
-void initialise_benchmark_results(benchmark_results *b_results, raw_result *r_result){
+void initialise_benchmark_results(benchmark_results *b_results, raw_result **r_result){
 
 	int name_length;
 
 	printf("before %ld\n",r_result);
-	r_result = (raw_result *)malloc(NTIMES * sizeof(raw_result));
+	*r_result = (raw_result *)malloc(NTIMES * sizeof(raw_result));
 	printf("after %ld\n",r_result);
 
 	b_results->Copy.avg = 0;
