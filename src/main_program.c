@@ -210,7 +210,7 @@ void initialise_benchmark_results(benchmark_results *b_results, raw_result *r_re
 // be called from the root process as the overall design is that
 // only the root process (the process which has ROOT rank) will
 // have this data.
-void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm){
+void print_results(aggregate_results a_results, raw_result *r_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm){
 
 	int omp_thread_num;
 	double bandwidth_avg, bandwidth_max, bandwidth_min;
