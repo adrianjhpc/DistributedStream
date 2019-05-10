@@ -55,7 +55,7 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results, r_results);
 
-	for(int i=0;i<NSIZE;i++){
+	for(int i=0;i<NTIMES;i++){
 	    printf("%d %f %f %f %f\n",i,r_results[i].copy,r_results[i].scale,r_results[i].add,r_results[i].triad);
 	}
 
