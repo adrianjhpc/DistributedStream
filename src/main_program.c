@@ -191,7 +191,8 @@ void initialise_benchmark_results(benchmark_results *b_results, raw_result *r_re
 
 	int name_length;
 
-	r_result = malloc(NTIMES * sizeof(r_result));
+	printf("%d %d %d\n",NTIMES, sizeof(raw_result),NTIMES*sizeof(raw_result));
+	r_result = malloc(NTIMES * sizeof(raw_result));
 
 	b_results->Copy.avg = 0;
 	b_results->Copy.min = FLT_MAX;
