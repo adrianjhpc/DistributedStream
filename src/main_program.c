@@ -86,7 +86,7 @@ void collect_results(benchmark_results b_results, raw_result *r_results, aggrega
 
 }
 
-void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm){
+void collect_individual_result(performance_result indivi, raw_result *r_results, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm){
 
 	// Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
 	// This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
