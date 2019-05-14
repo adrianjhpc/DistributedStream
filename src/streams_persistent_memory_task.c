@@ -137,7 +137,8 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	sprintf(path+strlen(path), "pstream_test_file");
 	sprintf(path+strlen(path), "%d", world_comm.rank);
 
-	array_length = (*array_size+OFFSET)*BytesPerWord*3;
+	array_length = (*array_size+OFFSET);
+	array_length = array_length*BytesPerWord*3;
 
 	if ((pmemaddr = pmem_map_file(path, array_length,
 			PMEM_FILE_CREATE|PMEM_FILE_EXCL,
