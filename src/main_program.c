@@ -72,9 +72,9 @@ int main(int argc, char **argv){
 		print_results(a_results, node_results, world_comm, array_size, node_comm);
 	}
 
-	MPI_Finalize();
-
 	free_benchmark_results(&b_results);
+
+	MPI_Finalize();
 
 }
 
