@@ -76,6 +76,7 @@ typedef struct aggregate_results {
 } aggregate_results;
 
 int get_key();
+unsigned long get_processor_and_core(int *chip, int *core);
 int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
 int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket);
 void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
