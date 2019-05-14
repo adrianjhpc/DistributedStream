@@ -335,7 +335,8 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	checkSTREAMresults(*array_size);
 
 	pmem_unmap(pmemaddr, mapped_len);
-
+	// Delete the file used to store the persistent data on the persistent memory
+	remove(path);
 
 	return 0;
 }
