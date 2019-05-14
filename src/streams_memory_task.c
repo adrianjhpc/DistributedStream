@@ -166,7 +166,7 @@ int stream_memory_task(benchmark_results *b_results, communicator world_comm, co
 		for (j=0; j<*array_size; j++)
 			b[j] = scalar*c[j];
 		times[1][k] = mysecond() - times[1][k];
-		b_results->Scale.raw_result[k = times[1][k];
+		b_results->Scale.raw_result[k] = times[1][k];
 
 		times[2][k] = mysecond();
 #pragma omp parallel for
