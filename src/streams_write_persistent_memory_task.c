@@ -52,11 +52,6 @@
 
  *-----------------------------------------------------------------------*/
 
-char path[MAX_FILE_NAME_LENGTH];
-char *pmemaddr = NULL;
-int array_element_size;
-int is_pmem;
-size_t mapped_len;
 
 STREAM_TYPE	*a, *b, *c;
 STREAM_TYPE *a_write, *b_write, *c_write;
@@ -73,6 +68,11 @@ extern int omp_get_num_threads();
 #endif
 
 int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level){
+	char path[MAX_FILE_NAME_LENGTH];
+	char *pmemaddr = NULL;
+	int array_element_size;
+	int is_pmem;
+	size_t mapped_len;
 	int	quantum;
 	int	BytesPerWord;
 	int	k;
