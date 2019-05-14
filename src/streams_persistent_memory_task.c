@@ -150,6 +150,16 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 
 	printf("Using file %s for pmem\n",path);
 
+	if(persist_level == none){
+		printf("Not persisting data.\n");
+	}else if(persist_level == individual){
+		printf("Persisting individual writes\n");
+	}else if(persist_level == collective){
+		printf("Persisting writes at the end of each benchmark iteration\n");
+	}else{
+		printf("No persist option specified, this is likely a mistake\n");
+	}
+
 	a = pmemaddr;
 	b = pmemaddr + (*array_size+OFFSET)*BytesPerWord;
 	c = pmemaddr + (*array_size+OFFSET)*BytesPerWord*2;
@@ -213,18 +223,30 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 
 		times[1][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++)
+		for (j=0; j<*array_size; j++){
 			b[j] = scalar*c[j];
-		pmem_persist(b, *array_size*BytesPerWord);
+			if(persist_level == individual){
+
+			}
+		}
+		if(persist_level == collective){
+			pmem_persist(b, *array_size*BytesPerWord);
+		}
 
 		times[1][k] = mysecond() - times[1][k];
 		b_results->Scale.raw_result[k] = times[1][k];
 
 		times[2][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++)
+		for (j=0; j<*array_size; j++){
 			c[j] = a[j]+b[j];
-		pmem_persist(c, *array_size*BytesPerWord);
+			if(persist_level == individual){
+
+			}
+		}
+		if(persist_level == collective){
+			pmem_persist(c, *array_size*BytesPerWord);
+		}
 
 		times[2][k] = mysecond() - times[2][k];
 		b_results->Add.raw_result[k] = times[2][k];
@@ -232,9 +254,15 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 		times[3][k] = mysecond();
 
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++)
+		for (j=0; j<*array_size; j++){
 			a[j] = b[j]+scalar*c[j];
-		pmem_persist(a, *array_size*BytesPerWord);
+			if(persist_level == individual){
+
+			}
+		}
+		if(persist_level == collective){
+			pmem_persist(a, *array_size*BytesPerWord);
+		}
 
 		times[3][k] = mysecond() - times[3][k];
 		b_results->Triad.raw_result[k] = times[3][k];
