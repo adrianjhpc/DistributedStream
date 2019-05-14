@@ -8,6 +8,7 @@ int main(int argc, char **argv){
 	int omp_thread_num;
 	int array_size;
 	int socket, core;
+	unsigned long id;
 	benchmark_results b_results;
 	aggregate_results node_results;
 	aggregate_results a_results;
@@ -66,7 +67,7 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results);
 
-	get_processor_and_core(&socket, &core);
+	id = get_processor_and_core(&socket, &core);
 
 	printf("%d %d %d\n",world_comm.rank, socket, core);
 
