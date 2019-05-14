@@ -206,61 +206,98 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 		// operations are synchronised on the node.
 		MPI_Barrier(node_comm.comm);
 		times[0][k] = mysecond();
+		if(persist_level == individual){
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++){
-			c[j] = a[j];
-			if(persist_level == individual){
-
+			for (j=0; j<*array_size; j++){
+				c[j] = a[j];
+				pmem_persist(c[j], BytesPerWord);
 			}
-		}
-		if(persist_level == collective){
+		}else if(persist_level == collective){
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				c[j] = a[j];
+			}
 			pmem_persist(c, *array_size*BytesPerWord);
+		}else{
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				c[j] = a[j];
+			}
 		}
 
 		times[0][k] = mysecond() - times[0][k];
 		b_results->Copy.raw_result[k] = times[0][k];
 
 		times[1][k] = mysecond();
+		if(persist_level == individual){
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++){
-			b[j] = scalar*c[j];
-			if(persist_level == individual){
-
+			for (j=0; j<*array_size; j++){
+				b[j] = scalar*c[j];
+				pmem_persist(b[j], BytesPerWord);
 			}
 		}
-		if(persist_level == collective){
+		else if(persist_level == collective){
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				b[j] = scalar*c[j];
+
+			}
 			pmem_persist(b, *array_size*BytesPerWord);
+		}else{
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				b[j] = scalar*c[j];
+
+			}
 		}
 
 		times[1][k] = mysecond() - times[1][k];
 		b_results->Scale.raw_result[k] = times[1][k];
 
 		times[2][k] = mysecond();
+		if(persist_level == individual){
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++){
-			c[j] = a[j]+b[j];
-			if(persist_level == individual){
+			for (j=0; j<*array_size; j++){
+				c[j] = a[j]+b[j];
+				pmem_persist(c[j], BytesPerWord);
+			}
+		}else if(persist_level == collective){
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				c[j] = a[j]+b[j];
 
 			}
-		}
-		if(persist_level == collective){
 			pmem_persist(c, *array_size*BytesPerWord);
+		}else{
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				c[j] = a[j]+b[j];
+
+			}
 		}
 
 		times[2][k] = mysecond() - times[2][k];
 		b_results->Add.raw_result[k] = times[2][k];
 
 		times[3][k] = mysecond();
-
+		if(persist_level == individual){
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++){
-			a[j] = b[j]+scalar*c[j];
-			if(persist_level == individual){
-
+			for (j=0; j<*array_size; j++){
+				a[j] = b[j]+scalar*c[j];
+				pmem_persist(a[j], BytesPerWord);
 			}
-		}
-		if(persist_level == collective){
+		}else if(persist_level == collective){
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				a[j] = b[j]+scalar*c[j];
+			}
 			pmem_persist(a, *array_size*BytesPerWord);
+		}else{
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				a[j] = b[j]+scalar*c[j];
+				pmem_persist(a[j], BytesPerWord);
+			}
 		}
 
 		times[3][k] = mysecond() - times[3][k];
