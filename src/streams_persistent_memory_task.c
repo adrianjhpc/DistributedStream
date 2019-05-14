@@ -136,11 +136,13 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	sprintf(path+strlen(path), "pstream_test_file");
 	sprintf(path+strlen(path), "%d", world_comm.rank);
 
+	printf("Size: %ld\n",(*array_size+OFFSET)*BytesPerWord*3);
+
 	if ((pmemaddr = pmem_map_file(path, (*array_size+OFFSET)*BytesPerWord*3,
 			PMEM_FILE_CREATE|PMEM_FILE_EXCL,
 			0666, &mapped_len, &is_pmem)) == NULL) {
 		perror("pmem_map_file");
-		fprintf(stderr, "Failed to pmem_map_file for filename:%s.\n", path);
+		fprintf(stderr, "Failed to pmem_map_file for filename: %s\n", path);
 		exit(-100);
 	}
 
