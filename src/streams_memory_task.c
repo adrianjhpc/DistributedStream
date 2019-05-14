@@ -154,6 +154,10 @@ int stream_memory_task(benchmark_results *b_results, communicator world_comm, co
 	scalar = 3.0;
 	for (k=0; k<NTIMES; k++)
 	{
+		// Add in a barrier synchronisation to ensure all processes on a node are undertaking the
+		// benchmark at the same time. This ensures the node level results are fair as all
+		// operations are synchronised on the node.
+		MPI_Barrier(node_comm.comm);
 		times[0][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)

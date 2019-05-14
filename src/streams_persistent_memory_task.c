@@ -71,7 +71,7 @@ static int checktick();
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size){
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket){
 	int			quantum;
 	int			BytesPerWord;
 	int			k;
@@ -128,10 +128,15 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	k++;
 	//printf ("Number of Threads counted = %i\n",k);
 #endif
-	strcpy(path,"/mnt/pmem_fsdax0/");
+	strcpy(path,"/mnt/pmem_fsdax");
+	sprintf(path+strlen(path), "%d", socket);
+	sprintf(path+strlen(path), "/");
+
 	// The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
 	sprintf(path+strlen(path), "pstream_test_file");
 	sprintf(path+strlen(path), "%d", world_comm.rank);
+
+	printf("pmem path %s\n", path);
 
 	if ((pmemaddr = pmem_map_file(path, (*array_size+OFFSET)*BytesPerWord*3,
 			PMEM_FILE_CREATE|PMEM_FILE_EXCL,
@@ -185,6 +190,10 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	scalar = 3.0;
 	for (k=0; k<NTIMES; k++)
 	{
+		// Add in a barrier synchronisation to ensure all processes on a node are undertaking the
+		// benchmark at the same time. This ensures the node level results are fair as all
+		// operations are synchronised on the node.
+		MPI_Barrier(node_comm.comm);
 		times[0][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)
