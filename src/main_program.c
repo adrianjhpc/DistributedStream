@@ -100,6 +100,10 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	double temp_value;
 	double temp_result;
 
+	double temp_store;
+
+	int k;
+
 	// Variable for the result of the reduction
 	resultloc rloc;
 	// Variable for the data to be reduced
@@ -115,9 +119,14 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
 	// Get the total avg value summed across all processes in a node to enable calculation
 	// of the avg bandwidth for a node.
-	temp_value = indivi.avg;
-	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
-	node_result->avg = temp_result;
+	temp_store = 0;
+	for(k=1; k<NTIMES; k++) {
+		temp_value = indivi.raw_result[k];
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
+		temp_store = temp_store + temp_result;
+	}
+	temp_store = temp_store/(NTIMES-1);
+	node_result->avg = temp_store;
 
 	if(node_comm.rank == root){
 		temp_value = node_result->avg;
@@ -145,10 +154,16 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
 	// Get the total max value summed across all processes in a node to enable calculation
 	// of the minimum bandwidth for a node.
-	temp_value = iloc.value;
+	temp_store = 0;
+	for(k=1; k<NTIMES; k++) {
+		temp_value = indivi.raw_result[k];
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
+		if(temp_result > temp_store){
+			temp_store = temp_result;
+		}
+	}
 
-	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
-	node_result->max = temp_result;
+	node_result->max = temp_store;
 
 	// Get the total max value across all the nodes
 	if(node_comm.rank == root){
@@ -166,8 +181,14 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
 	// Get the total min value summed across all processes in a node to enable calculation
 	// of the maximum bandwidth for a node.
-	temp_value = iloc.value;
-	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
+	temp_store = FLT_MAX;
+	for(k=1; k<NTIMES; k++) {
+		temp_value = indivi.raw_result[k];
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
+		if(temp_result < temp_store){
+			temp_store = temp_result;
+		}
+	}
 	node_result->min = temp_result;
 
 	// Get the total min value across all the nodes
