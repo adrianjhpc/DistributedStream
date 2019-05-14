@@ -42,12 +42,17 @@
 #define ROOT 0
 #define MAX_FILE_NAME_LENGTH 500
 
+typedef enum {
+	none,
+	individual,
+	collective
+} persist_state;
+
 typedef struct communicator {
 	MPI_Comm comm;
 	int rank;
 	int size;
 } communicator;
-
 
 typedef struct performance_result {
 	double avg;

@@ -71,7 +71,7 @@ static int checktick();
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket){
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level){
 	int	quantum;
 	int	BytesPerWord;
 	int	k;
@@ -198,9 +198,15 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 		MPI_Barrier(node_comm.comm);
 		times[0][k] = mysecond();
 #pragma omp parallel for
-		for (j=0; j<*array_size; j++)
+		for (j=0; j<*array_size; j++){
 			c[j] = a[j];
-		pmem_persist(c, *array_size*BytesPerWord);
+			if(persist_level == persist_state.individual){
+
+			}
+		}
+		if(persist_level == persist_state.collective){
+			pmem_persist(c, *array_size*BytesPerWord);
+		}
 
 		times[0][k] = mysecond() - times[0][k];
 		b_results->Copy.raw_result[k] = times[0][k];
