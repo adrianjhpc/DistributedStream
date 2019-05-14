@@ -1,4 +1,4 @@
-SRCMPI	= streams_write_persistent_memory_task.c streams_persistent_memory_task.c streams_memory_task.c main_program.c 
+SRCMPI	= streams_write_persistent_memory_task.c streams_read_persistent_memory_task.c streams_persistent_memory_task.c streams_memory_task.c main_program.c 
 
 OBJMPI	=$(SRCMPI:.c=.o)
 
