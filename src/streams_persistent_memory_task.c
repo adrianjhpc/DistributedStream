@@ -72,12 +72,13 @@ extern int omp_get_num_threads();
 #endif
 
 int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket){
-	int			quantum;
-	int			BytesPerWord;
-	int			k;
-	ssize_t		j;
-	STREAM_TYPE		scalar;
-	double		t, times[4][NTIMES];
+	int	quantum;
+	int	BytesPerWord;
+	int	k;
+	ssize_t	j;
+	STREAM_TYPE scalar;
+	long long array_length;
+	double t, times[4][NTIMES];
 
 	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_comm.size;
 
@@ -136,9 +137,10 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	sprintf(path+strlen(path), "pstream_test_file");
 	sprintf(path+strlen(path), "%d", world_comm.rank);
 
-	printf("Size: %ld\n",(*array_size+OFFSET)*BytesPerWord*3);
+	array_length = (*array_size+OFFSET)*BytesPerWord*3;
+	printf("Size: %ll\n", array_length);
 
-	if ((pmemaddr = pmem_map_file(path, (*array_size+OFFSET)*BytesPerWord*3,
+	if ((pmemaddr = pmem_map_file(path, array_length,
 			PMEM_FILE_CREATE|PMEM_FILE_EXCL,
 			0666, &mapped_len, &is_pmem)) == NULL) {
 		perror("pmem_map_file");
