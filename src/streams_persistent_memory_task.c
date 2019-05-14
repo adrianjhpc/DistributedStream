@@ -210,7 +210,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				c[j] = a[j];
-				pmem_persist(c[j], BytesPerWord);
+				pmem_persist(&c[j], BytesPerWord);
 			}
 		}else if(persist_level == collective){
 #pragma omp parallel for
@@ -233,21 +233,19 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				b[j] = scalar*c[j];
-				pmem_persist(b[j], BytesPerWord);
+				pmem_persist(&b[j], BytesPerWord);
 			}
 		}
 		else if(persist_level == collective){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				b[j] = scalar*c[j];
-
 			}
 			pmem_persist(b, *array_size*BytesPerWord);
 		}else{
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				b[j] = scalar*c[j];
-
 			}
 		}
 
@@ -259,20 +257,18 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				c[j] = a[j]+b[j];
-				pmem_persist(c[j], BytesPerWord);
+				pmem_persist(&c[j], BytesPerWord);
 			}
 		}else if(persist_level == collective){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				c[j] = a[j]+b[j];
-
 			}
 			pmem_persist(c, *array_size*BytesPerWord);
 		}else{
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				c[j] = a[j]+b[j];
-
 			}
 		}
 
@@ -284,7 +280,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				a[j] = b[j]+scalar*c[j];
-				pmem_persist(a[j], BytesPerWord);
+				pmem_persist(&a[j], BytesPerWord);
 			}
 		}else if(persist_level == collective){
 #pragma omp parallel for
@@ -296,7 +292,6 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
 				a[j] = b[j]+scalar*c[j];
-				pmem_persist(a[j], BytesPerWord);
 			}
 		}
 
