@@ -189,7 +189,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 			temp_store = temp_result;
 		}
 	}
-	node_result->min = temp_result;
+	node_result->min = temp_store;
 
 	// Get the total min value across all the nodes
 	if(node_comm.rank == root){
