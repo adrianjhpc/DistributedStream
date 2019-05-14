@@ -83,6 +83,10 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 
 	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_comm.size;
 
+	a = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
+	b = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
+	c = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
+
 	/* --- SETUP --- determine precision and check timing --- */
 
 	//printf("STREAM version $Revision: 5.10 $\n");
@@ -170,26 +174,23 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 		}
 	}
 
-	a = pmemaddr;
-	b = pmemaddr + (*array_size+OFFSET)*BytesPerWord;
-	c = pmemaddr + (*array_size+OFFSET)*BytesPerWord*2;
+	a_write = pmemaddr;
+	b_write = pmemaddr + (*array_size+OFFSET)*BytesPerWord;
+	c_write = pmemaddr + (*array_size+OFFSET)*BytesPerWord*2;
 
-	/* Get initial value for system clock. */
 #pragma omp parallel for
 	for (j=0; j<*array_size; j++) {
 		a[j] = 1.0;
 		b[j] = 2.0;
 		c[j] = 0.0;
+		a_write[j] = 1.0;
+		b_write[j] = 2.0;
+		c_write[j] = 0.0;
 	}
+	pmem_persist(a_write, *array_size*BytesPerWord);
+	pmem_persist(b_write, *array_size*BytesPerWord);
+	pmem_persist(c_write, *array_size*BytesPerWord);
 
-	//if  ( (quantum = checktick()) >= 1)
-	//	printf("Your clock granularity/precision appears to be "
-	//			"%d microseconds.\n", quantum);
-	//else {
-	//	printf("Your clock granularity appears to be "
-	//			"less than one microsecond.\n");
-	//	quantum = 1;
-	//}
 
 	t = mysecond();
 #pragma omp parallel for
@@ -220,19 +221,19 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 		if(persist_level == individual){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				c[j] = a[j];
-				pmem_persist(&c[j], BytesPerWord);
+				c_write[j] = a[j];
+				pmem_persist(&c_write[j], BytesPerWord);
 			}
 		}else if(persist_level == collective){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				c[j] = a[j];
+				c_write[j] = a[j];
 			}
-			pmem_persist(c, *array_size*BytesPerWord);
+			pmem_persist(c_write, *array_size*BytesPerWord);
 		}else{
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				c[j] = a[j];
+				c_write[j] = a[j];
 			}
 		}
 
@@ -243,20 +244,20 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 		if(persist_level == individual){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				b[j] = scalar*c[j];
-				pmem_persist(&b[j], BytesPerWord);
+				b_write[j] = scalar*c[j];
+				pmem_persist(&b_write[j], BytesPerWord);
 			}
 		}
 		else if(persist_level == collective){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				b[j] = scalar*c[j];
+				b_write[j] = scalar*c[j];
 			}
-			pmem_persist(b, *array_size*BytesPerWord);
+			pmem_persist(b_write, *array_size*BytesPerWord);
 		}else{
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				b[j] = scalar*c[j];
+				b_write[j] = scalar*c[j];
 			}
 		}
 
@@ -267,19 +268,19 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 		if(persist_level == individual){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				c[j] = a[j]+b[j];
-				pmem_persist(&c[j], BytesPerWord);
+				c_write[j] = a[j]+b[j];
+				pmem_persist(&c_write[j], BytesPerWord);
 			}
 		}else if(persist_level == collective){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				c[j] = a[j]+b[j];
+				c_write[j] = a[j]+b[j];
 			}
-			pmem_persist(c, *array_size*BytesPerWord);
+			pmem_persist(c_write, *array_size*BytesPerWord);
 		}else{
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				c[j] = a[j]+b[j];
+				c_write[j] = a[j]+b[j];
 			}
 		}
 
@@ -290,19 +291,19 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 		if(persist_level == individual){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				a[j] = b[j]+scalar*c[j];
-				pmem_persist(&a[j], BytesPerWord);
+				a_write[j] = b[j]+scalar*c[j];
+				pmem_persist(&a_write[j], BytesPerWord);
 			}
 		}else if(persist_level == collective){
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				a[j] = b[j]+scalar*c[j];
+				a_write[j] = b[j]+scalar*c[j];
 			}
-			pmem_persist(a, *array_size*BytesPerWord);
+			pmem_persist(a_write, *array_size*BytesPerWord);
 		}else{
 #pragma omp parallel for
 			for (j=0; j<*array_size; j++){
-				a[j] = b[j]+scalar*c[j];
+				a_write[j] = b[j]+scalar*c[j];
 			}
 		}
 
@@ -347,6 +348,9 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 	pmem_unmap(pmemaddr, mapped_len);
 	// Delete the file used to store the persistent data on the persistent memory
 	remove(path);
+	free(a);
+	free(b);
+	free(c);
 
 	return 0;
 }
@@ -426,9 +430,9 @@ static void checkSTREAMresults (int array_size){
 	bSumErr = 0.0;
 	cSumErr = 0.0;
 	for (j=0; j<array_size; j++) {
-		aSumErr += abs(a[j] - aj);
-		bSumErr += abs(b[j] - bj);
-		cSumErr += abs(c[j] - cj);
+		aSumErr += abs(a_write[j] - aj);
+		bSumErr += abs(b_write[j] - bj);
+		cSumErr += abs(c_write[j] - cj);
 		// if (j == 417) printf("Index 417: c[j]: %f, cj: %f\n",c[j],cj);	// MCCALPIN
 	}
 	aAvgErr = aSumErr / (STREAM_TYPE) array_size;
@@ -453,12 +457,12 @@ static void checkSTREAMresults (int array_size){
 		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",aj,aAvgErr,abs(aAvgErr)/aj);
 		ierr = 0;
 		for (j=0; j<array_size; j++) {
-			if (abs(a[j]/aj-1.0) > epsilon) {
+			if (abs(a_write[j]/aj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
 				if (ierr < 10) {
 					printf("         array a: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-							j,aj,a[j],abs((aj-a[j])/aAvgErr));
+							j,aj,a_write[j],abs((aj-a_write[j])/aAvgErr));
 				}
 #endif
 			}
@@ -472,12 +476,12 @@ static void checkSTREAMresults (int array_size){
 		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
 		ierr = 0;
 		for (j=0; j<array_size; j++) {
-			if (abs(b[j]/bj-1.0) > epsilon) {
+			if (abs(b_write[j]/bj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
 				if (ierr < 10) {
 					printf("         array b: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-							j,bj,b[j],abs((bj-b[j])/bAvgErr));
+							j,bj,b_write[j],abs((bj-b_write[j])/bAvgErr));
 				}
 #endif
 			}
@@ -491,12 +495,12 @@ static void checkSTREAMresults (int array_size){
 		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
 		ierr = 0;
 		for (j=0; j<array_size; j++) {
-			if (abs(c[j]/cj-1.0) > epsilon) {
+			if (abs(c_write[j]/cj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
 				if (ierr < 10) {
 					printf("         array c: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-							j,cj,c[j],abs((cj-c[j])/cAvgErr));
+							j,cj,c_write[j],abs((cj-c_write[j])/cAvgErr));
 				}
 #endif
 			}
@@ -507,7 +511,7 @@ static void checkSTREAMresults (int array_size){
 #ifdef VERBOSE
 	printf ("Results Validation Verbose Results: \n");
 	printf ("    Expected a(1), b(1), c(1): %f %f %f \n",aj,bj,cj);
-	printf ("    Observed a(1), b(1), c(1): %f %f %f \n",a[1],b[1],c[1]);
+	printf ("    Observed a(1), b(1), c(1): %f %f %f \n",a_write[1],b_write[1],c_write[1]);
 	printf ("    Rel Errors on a, b, c:     %e %e %e \n",abs(aAvgErr/aj),abs(bAvgErr/bj),abs(cAvgErr/cj));
 #endif
 }
