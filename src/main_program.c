@@ -68,7 +68,7 @@ int main(int argc, char **argv){
 
 	get_processor_and_core(&socket, &core);
 
-	stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket);
+	stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective);
 	collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
 	if(world_comm.rank == ROOT){

@@ -200,11 +200,11 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++){
 			c[j] = a[j];
-			if(persist_level == persist_state.individual){
+			if(persist_level == individual){
 
 			}
 		}
-		if(persist_level == persist_state.collective){
+		if(persist_level == collective){
 			pmem_persist(c, *array_size*BytesPerWord);
 		}
 
