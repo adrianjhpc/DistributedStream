@@ -71,7 +71,7 @@ static int checktick();
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, raw_result *r_results, communicator world_comm, communicator node_comm, int *array_size){
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size){
 	int			quantum;
 	int			BytesPerWord;
 	int			k;
@@ -192,6 +192,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, raw_result *r_re
 		pmem_persist(c, *array_size*BytesPerWord);
 
 		times[0][k] = mysecond() - times[0][k];
+		b_results->Copy.raw_result[k] = times[0][k];
 
 		times[1][k] = mysecond();
 #pragma omp parallel for
@@ -200,6 +201,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, raw_result *r_re
 		pmem_persist(b, *array_size*BytesPerWord);
 
 		times[1][k] = mysecond() - times[1][k];
+		b_results->Scale.raw_result[k] = times[1][k];
 
 		times[2][k] = mysecond();
 #pragma omp parallel for
@@ -208,6 +210,7 @@ int stream_persistent_memory_task(benchmark_results *b_results, raw_result *r_re
 		pmem_persist(c, *array_size*BytesPerWord);
 
 		times[2][k] = mysecond() - times[2][k];
+		b_results->Add.raw_result[k] = times[2][k];
 
 		times[3][k] = mysecond();
 
@@ -217,6 +220,8 @@ int stream_persistent_memory_task(benchmark_results *b_results, raw_result *r_re
 		pmem_persist(a, *array_size*BytesPerWord);
 
 		times[3][k] = mysecond() - times[3][k];
+		b_results->Triad.raw_result[k] = times[3][k];
+
 	}
 
 	/*	--- SUMMARY --- */

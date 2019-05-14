@@ -48,17 +48,12 @@ typedef struct communicator {
 	int size;
 } communicator;
 
-typedef struct raw_result {
-	double copy;
-	double scale;
-	double add;
-	double triad;
-} raw_result;
 
 typedef struct performance_result {
 	double avg;
 	double min;
 	double max;
+	double *raw_result;
 } performance_result;
 
 typedef struct benchmark_results {
@@ -81,9 +76,10 @@ typedef struct aggregate_results {
 } aggregate_results;
 
 int get_key();
-int stream_memory_task(benchmark_results *b_results, raw_result *r_results, communicator world_comm, communicator node_comm, int *array_size);
-int stream_persistent_memory_task(benchmark_results *b_results, raw_result *r_results, communicator world_comm, communicator node_comm, int *array_size);
-void collect_results(benchmark_results result, raw_result *r_results, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
-void initialise_benchmark_results(benchmark_results *b_results, raw_result **r_results);
-void collect_individual_result(performance_result indivi, raw_result *r_result, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm);
-void print_results(aggregate_results a_results, raw_result *r_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm);
+int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
+void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
+void initialise_benchmark_results(benchmark_results *b_results);
+void free_benchmark_results(benchmark_results *b_results);
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm);
+void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm);

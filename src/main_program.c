@@ -8,7 +8,6 @@ int main(int argc, char **argv){
 	int omp_thread_num;
 	int array_size;
 	benchmark_results b_results;
-	raw_result *r_results;
 	aggregate_results node_results;
 	aggregate_results a_results;
 	communicator world_comm, node_comm, root_comm;
@@ -53,40 +52,42 @@ int main(int argc, char **argv){
 	root_comm.rank = temp_rank;
 	root_comm.size = temp_size;
 
-	initialise_benchmark_results(&b_results, &r_results);
+	initialise_benchmark_results(&b_results);
 
-	stream_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
-	collect_results(b_results, r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
-
-	if(world_comm.rank == ROOT){
-		print_results(a_results, r_results, node_results, world_comm, array_size, node_comm);
-	}
-
-	initialise_benchmark_results(&b_results, &r_results);
-
-	stream_persistent_memory_task(&b_results, r_results, world_comm, node_comm, &array_size);
-	collect_results(b_results, r_results, &a_results, &node_results, world_comm, node_comm, root_comm);
+	stream_memory_task(&b_results, world_comm, node_comm, &array_size);
+	collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
 	if(world_comm.rank == ROOT){
-		print_results(a_results, r_results, node_results, world_comm, array_size, node_comm);
+		print_results(a_results, node_results, world_comm, array_size, node_comm);
 	}
 
-	free(r_results);
+	free_benchmark_results(&b_results);
+
+	initialise_benchmark_results(&b_results);
+
+	stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size);
+	collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
+
+	if(world_comm.rank == ROOT){
+		print_results(a_results, node_results, world_comm, array_size, node_comm);
+	}
 
 	MPI_Finalize();
 
-}
-
-void collect_results(benchmark_results b_results, raw_result *r_results, aggregate_results *a_results, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm){
-
-	collect_individual_result(b_results.Copy, r_results, &a_results->Copy, &node_results->Copy, a_results->copy_max, b_results.name, world_comm, node_comm, root_comm);
-	collect_individual_result(b_results.Scale, r_results, &a_results->Scale, &node_results->Scale, a_results->scale_max,  b_results.name, world_comm, node_comm, root_comm);
-	collect_individual_result(b_results.Add, r_results, &a_results->Add, &node_results->Add, a_results->add_max, b_results.name, world_comm, node_comm, root_comm);
-	collect_individual_result(b_results.Triad, r_results, &a_results->Triad, &node_results->Triad, a_results->triad_max, b_results.name, world_comm, node_comm, root_comm);
+	free_benchmark_results(&b_results);
 
 }
 
-void collect_individual_result(performance_result indivi, raw_result *r_results, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm){
+void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm){
+
+	collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, b_results.name, world_comm, node_comm, root_comm);
+	collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max,  b_results.name, world_comm, node_comm, root_comm);
+	collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, b_results.name, world_comm, node_comm, root_comm);
+	collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, b_results.name, world_comm, node_comm, root_comm);
+
+}
+
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, communicator world_comm, communicator node_comm, communicator root_comm){
 
 	// Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
 	// This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
@@ -145,6 +146,7 @@ void collect_individual_result(performance_result indivi, raw_result *r_results,
 	// Get the total max value summed across all processes in a node to enable calculation
 	// of the minimum bandwidth for a node.
 	temp_value = iloc.value;
+
 	MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
 	node_result->max = temp_result;
 
@@ -181,26 +183,38 @@ void collect_individual_result(performance_result indivi, raw_result *r_results,
 }
 
 // Initialise the benchmark results structure to enable proper collection of data
-void initialise_benchmark_results(benchmark_results *b_results, raw_result **r_result){
+void initialise_benchmark_results(benchmark_results *b_results){
 
 	int name_length;
-
-	*r_result = (raw_result *)malloc(NTIMES * sizeof(raw_result));
 
 	b_results->Copy.avg = 0;
 	b_results->Copy.min = FLT_MAX;
 	b_results->Copy.max= 0;
+	b_results->Copy.raw_result = malloc(NTIMES * sizeof(double));
 	b_results->Scale.avg = 0;
 	b_results->Scale.min = FLT_MAX;
 	b_results->Scale.max= 0;
+	b_results->Scale.raw_result = malloc(NTIMES * sizeof(double));
 	b_results->Add.avg = 0;
 	b_results->Add.min = FLT_MAX;
 	b_results->Add.max= 0;
+	b_results->Add.raw_result = malloc(NTIMES * sizeof(double));
 	b_results->Triad.avg = 0;
 	b_results->Triad.min = FLT_MAX;
 	b_results->Triad.max= 0;
+	b_results->Triad.raw_result = malloc(NTIMES * sizeof(double));
 
 	MPI_Get_processor_name(b_results->name, &name_length);
+
+}
+
+// Initialise the benchmark results structure to enable proper collection of data
+void free_benchmark_results(benchmark_results *b_results){
+
+	free(b_results->Copy.raw_result);
+	free(b_results->Scale.raw_result);
+	free(b_results->Add.raw_result);
+	free(b_results->Triad.raw_result);
 
 }
 
