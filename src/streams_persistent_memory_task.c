@@ -158,10 +158,6 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	}
 
 	if(world_comm.rank == ROOT){
-		printf("Using file %s for pmem\n",path);
-	}
-
-	if(world_comm.rank == ROOT){
 		if(persist_level == none){
 			printf("Not persisting data.\n");
 		}else if(persist_level == individual){
