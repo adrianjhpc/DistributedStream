@@ -135,8 +135,17 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 
 	// The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
 	sprintf(path+strlen(path), "pstream_test_file");
+
+	if(world_comm.rank == ROOT){
+		printf("Using file %s[rank] for pmem\n",path);
+	}
+
+	// Add the rank number onto the file name to ensure we have unique files for each MPI rank participating in the exercise.
 	sprintf(path+strlen(path), "%d", world_comm.rank);
 
+	// Calculate the size of the file/persistent memory area to create.
+	// This needs to be done as a separate variable to stop issues with integer
+	// overflow affecting large memory area size requests.
 	array_length = (*array_size+OFFSET);
 	array_length = array_length*BytesPerWord*3;
 
@@ -148,16 +157,20 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 		exit(-100);
 	}
 
-	printf("Using file %s for pmem\n",path);
+	if(world_comm.rank == ROOT){
+		printf("Using file %s for pmem\n",path);
+	}
 
-	if(persist_level == none){
-		printf("Not persisting data.\n");
-	}else if(persist_level == individual){
-		printf("Persisting individual writes\n");
-	}else if(persist_level == collective){
-		printf("Persisting writes at the end of each benchmark iteration\n");
-	}else{
-		printf("No persist option specified, this is likely a mistake\n");
+	if(world_comm.rank == ROOT){
+		if(persist_level == none){
+			printf("Not persisting data.\n");
+		}else if(persist_level == individual){
+			printf("Persisting individual writes\n");
+		}else if(persist_level == collective){
+			printf("Persisting writes at the end of each benchmark iteration\n");
+		}else{
+			printf("No persist option specified, this is likely a mistake\n");
+		}
 	}
 
 	a = pmemaddr;
