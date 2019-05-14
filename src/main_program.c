@@ -8,7 +8,6 @@ int main(int argc, char **argv){
 	int omp_thread_num;
 	int array_size;
 	int socket, core;
-	unsigned long id;
 	benchmark_results b_results;
 	aggregate_results node_results;
 	aggregate_results a_results;
@@ -67,7 +66,7 @@ int main(int argc, char **argv){
 
 	initialise_benchmark_results(&b_results);
 
-	id = get_processor_and_core(&socket, &core);
+	get_processor_and_core(&socket, &core);
 
 	printf("%d %d %d\n",world_comm.rank, socket, core);
 
@@ -385,8 +384,7 @@ unsigned long get_processor_and_core(int *chip, int *core){
 #else
 // If we're not on an ARM processor assume we're on an intel processor and use the
 // rdtscp instruction.
-unsigned long get_processor_and_core(int *chip, int *core)
-{
+unsigned long get_processor_and_core(int *chip, int *core){
 	unsigned long a,d,c;
 	__asm__ volatile("rdtscp" : "=a" (a), "=d" (d), "=c" (c));
 	*chip = (c & 0xFFF000)>>12;
