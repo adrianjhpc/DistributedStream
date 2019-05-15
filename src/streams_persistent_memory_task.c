@@ -224,10 +224,10 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 				c[j] = a[j];
 			}
 		}
-
 		times[0][k] = mysecond() - times[0][k];
 		b_results->Copy.raw_result[k] = times[0][k];
 
+		MPI_Barrier(node_comm.comm);
 		times[1][k] = mysecond();
 		if(persist_level == individual){
 #pragma omp parallel for
@@ -248,10 +248,10 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 				b[j] = scalar*c[j];
 			}
 		}
-
 		times[1][k] = mysecond() - times[1][k];
 		b_results->Scale.raw_result[k] = times[1][k];
 
+		MPI_Barrier(node_comm.comm);
 		times[2][k] = mysecond();
 		if(persist_level == individual){
 #pragma omp parallel for
@@ -271,10 +271,10 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 				c[j] = a[j]+b[j];
 			}
 		}
-
 		times[2][k] = mysecond() - times[2][k];
 		b_results->Add.raw_result[k] = times[2][k];
 
+		MPI_Barrier(node_comm.comm);
 		times[3][k] = mysecond();
 		if(persist_level == individual){
 #pragma omp parallel for
@@ -294,7 +294,6 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 				a[j] = b[j]+scalar*c[j];
 			}
 		}
-
 		times[3][k] = mysecond() - times[3][k];
 		b_results->Triad.raw_result[k] = times[3][k];
 

@@ -219,6 +219,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 			c_read[j] = c[j];
 		}
 
+		MPI_Barrier(node_comm.comm);
 		times[1][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++){
@@ -233,6 +234,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 			b_read[j] = b[j];
 		}
 
+		MPI_Barrier(node_comm.comm);
 		times[2][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++){
@@ -247,6 +249,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 			c_read[j] = c[j];
 		}
 
+		MPI_Barrier(node_comm.comm);
 		times[3][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++){

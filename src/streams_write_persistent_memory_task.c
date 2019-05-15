@@ -234,6 +234,7 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 			c[j] = c_write[j];
 		}
 
+		MPI_Barrier(node_comm.comm);
 		times[1][k] = mysecond();
 		if(persist_level == individual){
 #pragma omp parallel for
@@ -263,7 +264,7 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 			b[j] = b_write[j];
 		}
 
-
+		MPI_Barrier(node_comm.comm);
 		times[2][k] = mysecond();
 		if(persist_level == individual){
 #pragma omp parallel for
@@ -292,6 +293,7 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 			c[j] = c_write[j];
 		}
 
+		MPI_Barrier(node_comm.comm);
 		times[3][k] = mysecond();
 		if(persist_level == individual){
 #pragma omp parallel for
