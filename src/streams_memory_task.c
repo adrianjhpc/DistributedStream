@@ -165,6 +165,7 @@ int stream_memory_task(benchmark_results *b_results, communicator world_comm, co
 		times[0][k] = mysecond() - times[0][k];
 		b_results->Copy.raw_result[k] = times[0][k];
 
+		MPI_Barrier(node_comm.comm);
 		times[1][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)
@@ -172,6 +173,7 @@ int stream_memory_task(benchmark_results *b_results, communicator world_comm, co
 		times[1][k] = mysecond() - times[1][k];
 		b_results->Scale.raw_result[k] = times[1][k];
 
+		MPI_Barrier(node_comm.comm);
 		times[2][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)
@@ -179,6 +181,7 @@ int stream_memory_task(benchmark_results *b_results, communicator world_comm, co
 		times[2][k] = mysecond() - times[2][k];
 		b_results->Add.raw_result[k] = times[2][k];
 
+		MPI_Barrier(node_comm.comm);
 		times[3][k] = mysecond();
 #pragma omp parallel for
 		for (j=0; j<*array_size; j++)
