@@ -226,6 +226,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 		b_results->Copy.raw_result[k] = times[0][k];
 
 		// For correctness copy the final result across
+#pragma omp parallel for
 		for (j=0; j<*array_size; j++){
 			c_read[j] = c[j];
 		}
@@ -239,6 +240,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 		b_results->Scale.raw_result[k] = times[1][k];
 
 		// For correctness copy the final result across
+#pragma omp parallel for
 		for (j=0; j<*array_size; j++){
 			b_read[j] = b[j];
 		}
@@ -252,6 +254,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 		b_results->Add.raw_result[k] = times[2][k];
 
 		// For correctness copy the final result across
+#pragma omp parallel for
 		for (j=0; j<*array_size; j++){
 			c_read[j] = c[j];
 		}
@@ -265,6 +268,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 		b_results->Triad.raw_result[k] = times[3][k];
 
 		// For correctness copy the final result across
+#pragma omp parallel for
 		for (j=0; j<*array_size; j++){
 			a_read[j] = a[j];
 		}
