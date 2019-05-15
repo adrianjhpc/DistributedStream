@@ -57,9 +57,6 @@ STREAM_TYPE	*a, *b, *c;
 STREAM_TYPE *a_write, *b_write, *c_write;
 
 
-static char	*label[4] = {"Copy:      ", "Scale:     ",
-		"Add:       ", "Triad:     "};
-
 static double mysecond();
 static void checkSTREAMresults(int array_size);
 static int checktick();
@@ -342,18 +339,11 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 		b_results->Triad.max = MAX(b_results->Triad.max, times[3][k]);
 	}
 
-	//printf("Function    Best Rate MB/s  Avg time     Min time     Max time\n");
 	b_results->Copy.avg = b_results->Copy.avg/(double)(NTIMES-1);
 	b_results->Scale.avg = b_results->Scale.avg/(double)(NTIMES-1);
 	b_results->Add.avg = b_results->Add.avg/(double)(NTIMES-1);
 	b_results->Triad.avg = b_results->Triad.avg/(double)(NTIMES-1);
 
-
-	//printf("%s%12.1f  %11.6f  %11.6f  %11.6f\n", label[j],
-	//		1.0E-06 * bytes[j]/mintime[j],
-	//		avgtime[j],
-	//		mintime[j],
-	//		maxtime[j]);
 
 	/* --- Check Results --- */
 	checkSTREAMresults(*array_size);
