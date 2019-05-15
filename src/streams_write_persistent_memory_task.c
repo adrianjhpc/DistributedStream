@@ -87,32 +87,24 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 	b = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
 	c = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
 
-	/* --- SETUP --- determine precision and check timing --- */
-
-	//printf("STREAM version $Revision: 5.10 $\n");
 	BytesPerWord = sizeof(STREAM_TYPE);
-	//printf("This system uses %d bytes per array element.\n",BytesPerWord);
-
-#ifdef N
-	//printf("*****  WARNING: ******\n");
-	//printf("      It appears that you set the preprocessor variable N when compiling this code.\n");
-	//printf("      This version of the code uses the preprocesor variable STREAM_ARRAY_SIZE to control the array size\n");
-	//printf("      Reverting to default value of STREAM_ARRAY_SIZE=%llu\n",(unsigned long long) STREAM_ARRAY_SIZE);
-	//printf("*****  WARNING: ******\n");
-#endif
-
-	//printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) STREAM_ARRAY_SIZE, OFFSET);
-	//printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
-	//		BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
-	//		BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
-	//printf("Total memory required = %.1f MiB (= %.1f GiB).\n",
-	//		(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
-	//		(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
-	//printf("Each kernel will be executed %d times.\n", NTIMES);
-	//printf(" The *best* time for each kernel (excluding the first iteration)\n");
-	//printf(" will be used to compute the reported bandwidth.\n");
 
 	if(world_comm.rank == ROOT){
+		printf("This system uses %d bytes per array element.\n",BytesPerWord);
+
+		printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) STREAM_ARRAY_SIZE, OFFSET);
+		printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
+				BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
+				BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
+		printf("Total memory required per process = %.1f MiB (= %.1f GiB).\n",
+				(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
+				(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
+		printf("Total memory required per node = %.1f MiB (= %.1f GiB).\n",
+				node_comm.size * (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
+				node_comm.size * (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
+		printf("Each kernel will be executed %d times.\n", NTIMES);
+		printf("The first iteration is excluded from reported results\n");
+
 		printf("Stream Persistent Memory Task Write Only\n");
 	}
 
@@ -327,9 +319,9 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 
 		// For correctness copy the final result across
 #pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				a[j] = a_write[j];
-			}
+		for (j=0; j<*array_size; j++){
+			a[j] = a_write[j];
+		}
 
 	}
 

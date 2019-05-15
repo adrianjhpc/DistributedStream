@@ -89,9 +89,12 @@ int stream_memory_task(benchmark_results *b_results, communicator world_comm, co
 		printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
 				BytesPerWord * ( (double) *array_size / 1024.0/1024.0),
 				BytesPerWord * ( (double) *array_size / 1024.0/1024.0/1024.0));
-		printf("Total memory required = %.1f MiB (= %.1f GiB).\n",
+		printf("Total memory required per process = %.1f MiB (= %.1f GiB).\n",
 				(3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024.),
 				(3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024./1024.));
+		printf("Total memory required per node = %.1f MiB (= %.1f GiB).\n",
+				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024.),
+				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024./1024.));
 		printf("Each kernel will be executed %d times.\n", NTIMES);
 		printf(" The *best* time for each kernel (excluding the first iteration)\n");
 		printf(" will be used to compute the reported bandwidth.\n");
