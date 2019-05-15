@@ -92,16 +92,16 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 	if(world_comm.rank == ROOT){
 		printf("This system uses %d bytes per array element.\n",BytesPerWord);
 
-		printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) STREAM_ARRAY_SIZE, OFFSET);
+		printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) *array_size, OFFSET);
 		printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
-				BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
-				BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
+				BytesPerWord * ( (double) *array_size / 1024.0/1024.0),
+				BytesPerWord * ( (double) *array_size / 1024.0/1024.0/1024.0));
 		printf("Total memory required per process = %.1f MiB (= %.1f GiB).\n",
-				(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
-				(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
+				(3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024.),
+				(3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024./1024.));
 		printf("Total memory required per node = %.1f MiB (= %.1f GiB).\n",
-				node_comm.size * (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
-				node_comm.size * (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
+				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024.),
+				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024./1024.));
 		printf("Each kernel will be executed %d times.\n", NTIMES);
 		printf("The first iteration is excluded from reported results\n");
 
