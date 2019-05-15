@@ -236,9 +236,14 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 				c_write[j] = a[j];
 			}
 		}
-
 		times[0][k] = mysecond() - times[0][k];
 		b_results->Copy.raw_result[k] = times[0][k];
+
+		// For correctness copy the final result across
+#pragma omp parallel for
+		for (j=0; j<*array_size; j++){
+			c[j] = c_write[j];
+		}
 
 		times[1][k] = mysecond();
 		if(persist_level == individual){
@@ -260,9 +265,15 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 				b_write[j] = scalar*c[j];
 			}
 		}
-
 		times[1][k] = mysecond() - times[1][k];
 		b_results->Scale.raw_result[k] = times[1][k];
+
+		// For correctness copy the final result across
+#pragma omp parallel for
+		for (j=0; j<*array_size; j++){
+			b[j] = b_write[j];
+		}
+
 
 		times[2][k] = mysecond();
 		if(persist_level == individual){
@@ -283,9 +294,14 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 				c_write[j] = a[j]+b[j];
 			}
 		}
-
 		times[2][k] = mysecond() - times[2][k];
 		b_results->Add.raw_result[k] = times[2][k];
+
+		// For correctness copy the final result across
+#pragma omp parallel for
+		for (j=0; j<*array_size; j++){
+			c[j] = c_write[j];
+		}
 
 		times[3][k] = mysecond();
 		if(persist_level == individual){
@@ -306,9 +322,14 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 				a_write[j] = b[j]+scalar*c[j];
 			}
 		}
-
 		times[3][k] = mysecond() - times[3][k];
 		b_results->Triad.raw_result[k] = times[3][k];
+
+		// For correctness copy the final result across
+#pragma omp parallel for
+			for (j=0; j<*array_size; j++){
+				a[j] = a_write[j];
+			}
 
 	}
 
