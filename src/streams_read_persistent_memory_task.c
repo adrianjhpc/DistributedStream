@@ -389,9 +389,9 @@ static void checkSTREAMresults (int array_size){
 	bSumErr = 0.0;
 	cSumErr = 0.0;
 	for (j=0; j<array_size; j++) {
-		aSumErr += abs(a_write[j] - aj);
-		bSumErr += abs(b_write[j] - bj);
-		cSumErr += abs(c_write[j] - cj);
+		aSumErr += abs(a[j] - aj);
+		bSumErr += abs(b[j] - bj);
+		cSumErr += abs(c[j] - cj);
 		// if (j == 417) printf("Index 417: c[j]: %f, cj: %f\n",c[j],cj);	// MCCALPIN
 	}
 	aAvgErr = aSumErr / (STREAM_TYPE) array_size;
@@ -416,12 +416,12 @@ static void checkSTREAMresults (int array_size){
 		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",aj,aAvgErr,abs(aAvgErr)/aj);
 		ierr = 0;
 		for (j=0; j<array_size; j++) {
-			if (abs(a_write[j]/aj-1.0) > epsilon) {
+			if (abs(a[j]/aj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
 				if (ierr < 10) {
 					printf("         array a: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-							j,aj,a_write[j],abs((aj-a_write[j])/aAvgErr));
+							j,aj,a[j],abs((aj-a[j])/aAvgErr));
 				}
 #endif
 			}
@@ -435,12 +435,12 @@ static void checkSTREAMresults (int array_size){
 		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
 		ierr = 0;
 		for (j=0; j<array_size; j++) {
-			if (abs(b_write[j]/bj-1.0) > epsilon) {
+			if (abs(b[j]/bj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
 				if (ierr < 10) {
 					printf("         array b: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-							j,bj,b_write[j],abs((bj-b_write[j])/bAvgErr));
+							j,bj,b[j],abs((bj-b[j])/bAvgErr));
 				}
 #endif
 			}
@@ -454,12 +454,12 @@ static void checkSTREAMresults (int array_size){
 		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
 		ierr = 0;
 		for (j=0; j<array_size; j++) {
-			if (abs(c_write[j]/cj-1.0) > epsilon) {
+			if (abs(c[j]/cj-1.0) > epsilon) {
 				ierr++;
 #ifdef VERBOSE
 				if (ierr < 10) {
 					printf("         array c: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-							j,cj,c_write[j],abs((cj-c_write[j])/cAvgErr));
+							j,cj,c[j],abs((cj-c[j])/cAvgErr));
 				}
 #endif
 			}
@@ -470,7 +470,7 @@ static void checkSTREAMresults (int array_size){
 #ifdef VERBOSE
 	printf ("Results Validation Verbose Results: \n");
 	printf ("    Expected a(1), b(1), c(1): %f %f %f \n",aj,bj,cj);
-	printf ("    Observed a(1), b(1), c(1): %f %f %f \n",a_write[1],b_write[1],c_write[1]);
+	printf ("    Observed a(1), b(1), c(1): %f %f %f \n",a[1],b[1],c[1]);
 	printf ("    Rel Errors on a, b, c:     %e %e %e \n",abs(aAvgErr/aj),abs(bAvgErr/bj),abs(cAvgErr/cj));
 #endif
 }
