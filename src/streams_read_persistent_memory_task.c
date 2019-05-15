@@ -113,7 +113,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 	//printf(" will be used to compute the reported bandwidth.\n");
 
 	if(world_comm.rank == ROOT){
-		printf("Stream Persistent Memory Task\n");
+		printf("Stream Persistent Memory Task Read Only\n");
 	}
 
 #ifdef _OPENMP
