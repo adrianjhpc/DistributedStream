@@ -321,7 +321,7 @@ void print_results(aggregate_results a_results, aggregate_results node_results, 
 	}
 	printf("Running with %d MPI processes, each with %d OpenMP threads. %d processes per node\n", world_comm.size, omp_thread_num, node_comm.size);
 	printf("Benchmark   Average Bandwidth    Avg Time    Max Bandwidth   Min Time    Min Bandwidth   Max Time   Max Time Location\n");
-	printf("                  (GB/s)         (seconds)       (GB/s)      (seconds)       (GB/s)      (seconds)      (proc name)\n");
+	printf("                  (MB/s)         (seconds)       (MB/s)      (seconds)       (MB/s)      (seconds)      (proc name)\n");
 	printf("----------------------------------------------------------------------------------------------------------------------\n");
 
 	// Calculate the bandwidths. Max bandwidth is achieved using the min time (i.e. the fast time). This is
