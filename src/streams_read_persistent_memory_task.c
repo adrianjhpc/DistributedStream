@@ -63,7 +63,7 @@ static int checktick();
 extern int omp_get_num_threads();
 #endif
 
-int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level){
+int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket){
 	char path[MAX_FILE_NAME_LENGTH];
 	char *pmemaddr = NULL;
 	int array_element_size;
@@ -150,17 +150,6 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 		exit(-100);
 	}
 
-	if(world_comm.rank == ROOT){
-		if(persist_level == none){
-			printf("Not persisting data.\n");
-		}else if(persist_level == individual){
-			printf("Persisting individual writes\n");
-		}else if(persist_level == collective){
-			printf("Persisting writes at the end of each benchmark iteration\n");
-		}else{
-			printf("No persist option specified, this is likely a mistake\n");
-		}
-	}
 
 	a_read = pmemaddr;
 	b_read = pmemaddr + (*array_size+OFFSET)*BytesPerWord;

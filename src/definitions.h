@@ -80,12 +80,13 @@ typedef struct aggregate_results {
 	char triad_max[MPI_MAX_PROCESSOR_NAME];
 } aggregate_results;
 
+int name_to_colour(const char *);
 int get_key();
 unsigned long get_processor_and_core(int *chip, int *core);
 int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level);
+int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket);
 int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level);
-int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level);
+int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket);
 void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, communicator world_comm, communicator node_comm, communicator root_comm);
 void initialise_benchmark_results(benchmark_results *b_results);
 void free_benchmark_results(benchmark_results *b_results);

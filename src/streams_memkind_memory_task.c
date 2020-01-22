@@ -2,8 +2,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <sys/time.h>
-#include <libpmem.h>
-
+#include <memkind.h>
 
 /*-----------------------------------------------------------------------
  * INSTRUCTIONS:
@@ -29,8 +28,6 @@
 #endif
 
 
-
-
 /*  Users are allowed to modify the "OFFSET" variable, which *may* change the
  *         relative alignment of the arrays (though compilers may change the
  *         effective offset by making the arrays non-contiguous on some systems).
@@ -44,47 +41,70 @@
 #endif
 
 /*
- *
  *     To run with single-precision variables and arithmetic, simply add
  *         -DSTREAM_TYPE=float
  *     to the compile line.
- *     Note that this changes the minimum array sizes required --- see (1) above.
-
+ *     Note that this changes the array sizes required
+ *
  *-----------------------------------------------------------------------*/
 
-STREAM_TYPE	*a, *b, *c;
+
 
 static double mysecond();
 static void checkSTREAMresults(int array_size);
 static int checktick();
+
 #ifdef _OPENMP
 extern int omp_get_num_threads();
 #endif
 
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level){
-	char path[MAX_FILE_NAME_LENGTH];
-	char *pmemaddr = NULL;
-	int array_element_size;
-	int is_pmem;
-	size_t mapped_len;
-	int	quantum;
-	int	BytesPerWord;
-	int	k;
-	ssize_t	j;
-	STREAM_TYPE scalar;
-	long long array_length;
-	double t, times[4][NTIMES];
+STREAM_TYPE *a, *b, *c;
 
-	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_comm.size;
+
+int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket){
+	int			quantum;
+	int			BytesPerWord;
+	int			k;
+        int err;
+	ssize_t		j;
+        size_t          pmem_size;
+	STREAM_TYPE		scalar;
+	double		t, times[4][NTIMES];
+        char filename[1000];
+         struct memkind *my_data = NULL; 
+
+ 	*array_size = ((LAST_LEVEL_CACHE_SIZE*4)/node_comm.size);
+        pmem_size = (long long)sizeof(STREAM_TYPE)*(*array_size+OFFSET)*8;
+
+        strcpy(filename,"/mnt/pmem_fsdax");
+        sprintf(filename+strlen(filename), "%d", socket);
+        err = memkind_create_pmem(filename, pmem_size, &my_data);
+	if (err) {
+	   fprintf(stderr, "Unable to create pmem partition %d\n",err);
+	}
+	pmem_size = (long long)sizeof(STREAM_TYPE)*(*array_size+OFFSET);
+        a = (STREAM_TYPE *)memkind_malloc(my_data, pmem_size);
+        b = (STREAM_TYPE *)memkind_malloc(my_data, pmem_size);
+        c = (STREAM_TYPE *)memkind_malloc(my_data, pmem_size);
+        if (a == NULL) {
+	  fprintf(stderr, "Unable to allocate pmem array a\n");
+	}
+        if (b == NULL) {
+          fprintf(stderr, "Unable to allocate pmem array b\n");
+        }
+        if (c == NULL) {
+          fprintf(stderr, "Unable to allocate pmem array c\n");
+        }
 
 	/* --- SETUP --- determine precision and check timing --- */
 
 	//printf("STREAM version $Revision: 5.10 $\n");
 	BytesPerWord = sizeof(STREAM_TYPE);
 
-	if(world_comm.rank == ROOT){
-		printf("This system uses %d bytes per array element.\n",BytesPerWord);
 
+	if(world_comm.rank == ROOT){
+		printf("Stream MemKind (pmem) Memory Task\n");
+		printf("This system uses %d bytes per array element.\n",BytesPerWord);
 		printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) *array_size, OFFSET);
 		printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
 				BytesPerWord * ( (double) *array_size / 1024.0/1024.0),
@@ -96,9 +116,8 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024.),
 				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024./1024.));
 		printf("Each kernel will be executed %d times.\n", NTIMES);
-		printf("The first iteration is excluded from reported results\n");
-
-		printf("Stream Persistent Memory Task\n");
+		printf(" The *best* time for each kernel (excluding the first iteration)\n");
+		printf(" will be used to compute the reported bandwidth.\n");
 	}
 
 #ifdef _OPENMP
@@ -119,49 +138,6 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	k++;
 	//printf ("Number of Threads counted = %i\n",k);
 #endif
-	strcpy(path,"/mnt/pmem_fsdax");
-	sprintf(path+strlen(path), "%d", socket);
-	sprintf(path+strlen(path), "/");
-
-	// The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
-	sprintf(path+strlen(path), "pstream_test_file");
-
-	if(world_comm.rank == ROOT){
-		printf("Using file %s[rank] for pmem\n",path);
-	}
-
-	// Add the rank number onto the file name to ensure we have unique files for each MPI rank participating in the exercise.
-	sprintf(path+strlen(path), "%d", world_comm.rank);
-
-	// Calculate the size of the file/persistent memory area to create.
-	// This needs to be done as a separate variable to stop issues with integer
-	// overflow affecting large memory area size requests.
-	array_length = (*array_size+OFFSET);
-	array_length = array_length*BytesPerWord*3;
-
-	if ((pmemaddr = pmem_map_file(path, array_length,
-			PMEM_FILE_CREATE|PMEM_FILE_EXCL,
-			0666, &mapped_len, &is_pmem)) == NULL) {
-		perror("pmem_map_file");
-		fprintf(stderr, "Failed to pmem_map_file for filename: %s\n", path);
-		exit(-100);
-	}
-
-	if(world_comm.rank == ROOT){
-		if(persist_level == none){
-			printf("Not persisting data.\n");
-		}else if(persist_level == individual){
-			printf("Persisting individual writes\n");
-		}else if(persist_level == collective){
-			printf("Persisting writes at the end of each benchmark iteration\n");
-		}else{
-			printf("No persist option specified, this is likely a mistake\n");
-		}
-	}
-
-	a = pmemaddr;
-	b = pmemaddr + (*array_size+OFFSET)*BytesPerWord;
-	c = pmemaddr + (*array_size+OFFSET)*BytesPerWord*2;
 
 	/* Get initial value for system clock. */
 #pragma omp parallel for
@@ -206,97 +182,35 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 		// operations are synchronised on the node.
 		MPI_Barrier(node_comm.comm);
 		times[0][k] = mysecond();
-		if(persist_level == individual){
 #pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				c[j] = a[j];
-				pmem_persist(&c[j], BytesPerWord);
-			}
-		}else if(persist_level == collective){
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				c[j] = a[j];
-			}
-			pmem_persist(c, *array_size*BytesPerWord);
-		}else{
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				c[j] = a[j];
-			}
-		}
+		for (j=0; j<*array_size; j++)
+			c[j] = a[j];
 		times[0][k] = mysecond() - times[0][k];
 		b_results->Copy.raw_result[k] = times[0][k];
 
 		MPI_Barrier(node_comm.comm);
 		times[1][k] = mysecond();
-		if(persist_level == individual){
 #pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				b[j] = scalar*c[j];
-				pmem_persist(&b[j], BytesPerWord);
-			}
-		}
-		else if(persist_level == collective){
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				b[j] = scalar*c[j];
-			}
-			pmem_persist(b, *array_size*BytesPerWord);
-		}else{
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				b[j] = scalar*c[j];
-			}
-		}
+		for (j=0; j<*array_size; j++)
+			b[j] = scalar*c[j];
 		times[1][k] = mysecond() - times[1][k];
 		b_results->Scale.raw_result[k] = times[1][k];
 
 		MPI_Barrier(node_comm.comm);
 		times[2][k] = mysecond();
-		if(persist_level == individual){
 #pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				c[j] = a[j]+b[j];
-				pmem_persist(&c[j], BytesPerWord);
-			}
-		}else if(persist_level == collective){
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				c[j] = a[j]+b[j];
-			}
-			pmem_persist(c, *array_size*BytesPerWord);
-		}else{
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				c[j] = a[j]+b[j];
-			}
-		}
+		for (j=0; j<*array_size; j++)
+			c[j] = a[j]+b[j];
 		times[2][k] = mysecond() - times[2][k];
 		b_results->Add.raw_result[k] = times[2][k];
 
 		MPI_Barrier(node_comm.comm);
 		times[3][k] = mysecond();
-		if(persist_level == individual){
 #pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				a[j] = b[j]+scalar*c[j];
-				pmem_persist(&a[j], BytesPerWord);
-			}
-		}else if(persist_level == collective){
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				a[j] = b[j]+scalar*c[j];
-			}
-			pmem_persist(a, *array_size*BytesPerWord);
-		}else{
-#pragma omp parallel for
-			for (j=0; j<*array_size; j++){
-				a[j] = b[j]+scalar*c[j];
-			}
-		}
+		for (j=0; j<*array_size; j++)
+			a[j] = b[j]+scalar*c[j];
 		times[3][k] = mysecond() - times[3][k];
 		b_results->Triad.raw_result[k] = times[3][k];
-
 	}
 
 	/*	--- SUMMARY --- */
@@ -321,13 +235,12 @@ int stream_persistent_memory_task(benchmark_results *b_results, communicator wor
 	b_results->Add.avg = b_results->Add.avg/(double)(NTIMES-1);
 	b_results->Triad.avg = b_results->Triad.avg/(double)(NTIMES-1);
 
-
 	/* --- Check Results --- */
 	checkSTREAMresults(*array_size);
 
-	pmem_unmap(pmemaddr, mapped_len);
-	// Delete the file used to store the persistent data on the persistent memory
-	remove(path);
+	memkind_free(my_data, a);
+	memkind_free(my_data, b);
+	memkind_free(my_data, c);
 
 	return 0;
 }

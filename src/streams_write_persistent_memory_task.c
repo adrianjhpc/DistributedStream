@@ -183,8 +183,11 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 
 	t = mysecond();
 #pragma omp parallel for
-	for (j = 0; j < *array_size; j++)
+	for (j = 0; j < *array_size; j++){
 		a[j] = 2.0E0 * a[j];
+                a_write[j] = 2.0E0 * a_write[j];
+        }
+        pmem_persist(a_write, *array_size*BytesPerWord);
 	t = 1.0E6 * (mysecond() - t);
 
 	//printf("Each test below will take on the order"
