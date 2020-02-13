@@ -352,7 +352,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	temp_store = FLT_MAX;
 	for(k=1; k<NTIMES; k++) {
 		temp_value = indivi.raw_result[k];
-		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, node_comm.comm);
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, node_comm.comm);
 		if(temp_result < temp_store){
 			temp_store = temp_result;
 		}
