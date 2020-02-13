@@ -5,7 +5,6 @@ int main(int argc, char **argv){
 	int temp_size, temp_rank;
 	MPI_Comm temp_comm;
 	int node_key;
-	int omp_thread_num;
 	int array_size;
 	int socket, core;
 	int performing_persistent = 0;
@@ -290,8 +289,9 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	temp_store = 0;
 	for(k=1; k<NTIMES; k++) {
 		temp_value = indivi.raw_result[k];
-		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, node_comm.comm);
-		temp_store = temp_store + temp_result;
+		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, ROOT, node_comm.comm);
+                temp_result = temp_result/node_comm.size;
+ 		temp_store = temp_store + temp_result;
 	}
 	temp_store = temp_store/(NTIMES-1);
 	node_result->avg = temp_store;
