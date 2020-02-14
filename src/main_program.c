@@ -14,6 +14,7 @@ int main(int argc, char **argv){
 	aggregate_results a_results;
 	communicator world_comm, node_comm, root_comm;
 
+#ifdef PMEM
 	if(argc != 3){
 		printf("Expecting two parameters (each 0 or 1) specifying whether memkind memory and/or persistent memory tasks should be run\n");
 		exit(0);
@@ -29,6 +30,10 @@ int main(int argc, char **argv){
 			exit(0);
 		}
 	}
+#else
+        performing_persistent = 0;
+        performing_memkind = 0;
+#endif
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &temp_size);
@@ -85,7 +90,7 @@ int main(int argc, char **argv){
 
 
         if(performing_memkind == 1){
-
+#ifdef PMEM
                 initialise_benchmark_results(&b_results);
 
                 // Barrier here to ensure all processes are active and ready to start benchmarking
@@ -94,7 +99,6 @@ int main(int argc, char **argv){
                 // processes removing or adding files (as in the persistent memory benchmarks) from
                 // previous runs of the program.
                 MPI_Barrier(world_comm.comm);
-
                 stream_memkind_memory_task(&b_results, world_comm, node_comm, &array_size, socket);
                 collect_results(b_results, &a_results, &node_results, world_comm, node_comm, root_comm);
 
@@ -103,11 +107,11 @@ int main(int argc, char **argv){
                 }
  
                 free_benchmark_results(&b_results);
-
+#endif
         }
 
         if(performing_persistent == 1){
-
+#ifdef PMEM
                 initialise_benchmark_results(&b_results);
 
                 // Barrier here to ensure all processes are active and ready to start benchmarking
@@ -238,7 +242,7 @@ int main(int argc, char **argv){
 		}
 
 		free_benchmark_results(&b_results);
-
+#endif
 	}
 
 	MPI_Finalize();
@@ -267,7 +271,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 	double temp_value;
 	double temp_result;
 
-	double temp_store;
+	double temp_store, min_time_store, max_time_store;
 
 	int k;
 
@@ -320,53 +324,51 @@ void collect_individual_result(performance_result indivi, performance_result *re
 		strcpy(max_name, name);
 	}
 
-	// Get the total max value summed across all processes in a node to enable calculation
-	// of the minimum bandwidth for a node.
-	temp_store = 0;
+	// Get the total max value across all processes in a node for each repeat of the benchmark to enable calculation
+	// of the minimum and maximum bandwidth seen within a node. The minimum bandwidth will be the longest time 
+	// for all processes across all the repeats of the benchmark (i.e. that represents the maximum runtime for 
+	// any of the repeats). The maximum bandwidth will be the minimum longest time across the repeats of the 
+	// benchmark (i.e. the repeat of the benchmark that takes the shortest overall time). We can use Max here 
+	// because each benchmark is surrounded by Barriers meaning that the longest process for each run 
+	// represents the slowest part of that run and therefore the limit on the bandwith achieved.
+	max_time_store = 0;
+        min_time_store = FLT_MAX;
 	for(k=1; k<NTIMES; k++) {
 		temp_value = indivi.raw_result[k];
 		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, node_comm.comm);
-		if(temp_result > temp_store){
-			temp_store = temp_result;
+		if(temp_result > max_time_store){
+			max_time_store = temp_result;
 		}
+                if(temp_result < min_time_store){
+                        min_time_store = temp_result;
+                }
 	}
 
-	node_result->max = temp_store;
+	node_result->max = max_time_store;
+        node_result->min = min_time_store;
 
-	// Get the total max value across all the nodes
+	// Get the total max and min value across all the nodes
+	// For the max we want the slowest node (i.e. the MPI_MAX of the max)
+	// For the min we want the fastest node (i.e. the MPI_MIN of the min)
+	// These should give us the upper and lower bounds on the node performances
 	if(node_comm.rank == root){
 		temp_value = node_result->max;
 		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, ROOT, root_comm.comm);
 		if(world_comm.rank == root){
 			node_result->max = temp_result;
 		}
+                temp_value = node_result->min;
+                MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, root_comm.comm);
+                if(world_comm.rank == root){
+                        node_result->min = temp_result;
+                }
+
 	}
 
 	iloc.value = indivi.min;
 	iloc.rank = world_comm.rank;
 	MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, world_comm.comm);
 	result->min = rloc.value;
-
-	// Get the total min value summed across all processes in a node to enable calculation
-	// of the maximum bandwidth for a node.
-	temp_store = FLT_MAX;
-	for(k=1; k<NTIMES; k++) {
-		temp_value = indivi.raw_result[k];
-		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, node_comm.comm);
-		if(temp_result < temp_store){
-			temp_store = temp_result;
-		}
-	}
-	node_result->min = temp_store;
-
-	// Get the total min value across all the nodes
-	if(node_comm.rank == root){
-		temp_value = node_result->min;
-		MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MIN, ROOT, root_comm.comm);
-		if(world_comm.rank == root){
-			node_result->min = temp_result;
-		}
-	}
 
 
 }
