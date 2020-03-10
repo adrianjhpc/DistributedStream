@@ -22,7 +22,7 @@ main:	$(PRGMPI)
 	$(CC) -c $(CFLAGS) $(ELIBS) $<
 
 $(PRGMPI):$(OBJMPI) Makefile definitions.h
-	$(CC) $(LDFLAGS) -o $@ ~/mpi_high_water_mark.o $(OBJMPI) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJMPI) $(LIBS)
 
 clean:
 	rm -fr $(TMP) $(OBJMPI) $(PRGMPI) core
