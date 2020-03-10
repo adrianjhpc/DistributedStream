@@ -278,7 +278,7 @@ int main(int argc, char **argv){
 
 void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm){
 
-  enum benchmark_type benchmark;
+  benchmark_type benchmark;
 
   benchmark = copy;
   collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm);
