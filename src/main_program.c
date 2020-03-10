@@ -586,10 +586,10 @@ void save_results(char *filename, benchmark_results *all_node_results, int array
   mxml_node_t *individual_result;
 
   int k, omp_num_threads;
-  double copy_size = 2 * sizeof(STREAM_TYPE) * array_size;
-  double scale_size = 2 * sizeof(STREAM_TYPE) * array_size;
-  double add_size	= 3 * sizeof(STREAM_TYPE) * array_size;
-  double triad_size = 3 * sizeof(STREAM_TYPE) * array_size;
+  long copy_size = 2 * sizeof(STREAM_TYPE) * array_size;
+  long scale_size = 2 * sizeof(STREAM_TYPE) * array_size;
+  long add_size = 3 * sizeof(STREAM_TYPE) * array_size;
+  long triad_size = 3 * sizeof(STREAM_TYPE) * array_size;
 
 #pragma omp parallel default(shared)
   {
