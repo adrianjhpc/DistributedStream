@@ -87,9 +87,7 @@ int main(int argc, char **argv){
   initialise_benchmark_results(&b_results);
 
   stream_memory_task(&b_results, world_comm, node_comm, &array_size);
-  printf("Done streams_memory_task\n");
   collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
-  printf("Done collect_results\n");
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
     strcpy(filename, "memory_results.dat");
@@ -340,7 +338,6 @@ void collect_individual_result(performance_result indivi, performance_result *re
   temp_store = temp_store/(NTIMES-1);
   node_result->avg = temp_store;
 
-  printf("aa\n");
 
   if(node_comm.rank == root){
     temp_value = node_result->avg;
@@ -348,17 +345,10 @@ void collect_individual_result(performance_result indivi, performance_result *re
     if(world_comm.rank == root){
       node_result->avg = temp_result/root_comm.size;
     }
-    printf("%lf\n",temp_value);
     MPI_Gather(&temp_value, 1, MPI_DOUBLE, &average_for_nodes, 1, MPI_DOUBLE, root, root_comm.comm);
     MPI_Gather(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, &node_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, root_comm.comm);
-    if(world_comm.rank == root){
-          for(k=0; k<root_comm.size; k++){
-        printf("avg for nodes %lf\n", average_for_nodes[k]);
-         } 
-    }
   }
 
-  printf("bb\n");
 
   iloc.value = indivi.max;
   iloc.rank = world_comm.rank;
@@ -376,7 +366,6 @@ void collect_individual_result(performance_result indivi, performance_result *re
     strcpy(max_name, name);
   }
 
-  printf("cc\n");
 
   // Get the total max value across all processes in a node for each repeat of the benchmark to enable calculation
   // of the minimum and maximum bandwidth seen within a node. The minimum bandwidth will be the longest time 
@@ -401,7 +390,6 @@ void collect_individual_result(performance_result indivi, performance_result *re
   node_result->max = max_time_store;
   node_result->min = min_time_store;
 
-  printf("dd\n");
 
   // Get the total max and min value across all the nodes
   // For the max we want the slowest node (i.e. the MPI_MAX of the max)
@@ -423,14 +411,12 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
   }
 
-  printf("ee\n");
 
   iloc.value = indivi.min;
   iloc.rank = world_comm.rank;
   MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, world_comm.comm);
   result->min = rloc.value;
 
-  printf("ff\n");
 
   if(node_comm.rank == root){
     switch (benchmark){
@@ -470,7 +456,6 @@ void collect_individual_result(performance_result indivi, performance_result *re
     }
   }
 
-  printf("gg\n");
 
 }
 
@@ -653,7 +638,6 @@ void save_results(char *filename, benchmark_results *all_node_results, int array
     mxmlNewReal(individual_result, all_node_results[k].Copy.max);
     node = mxmlNewElement(result, "Scale");
     individual_result = mxmlNewElement(node, "Average");
-    printf("Scale average %lf\n", all_node_results[k].Scale.avg);
     mxmlNewReal(individual_result, all_node_results[k].Scale.avg);
     individual_result = mxmlNewElement(node, "Minimum");
     mxmlNewReal(individual_result, all_node_results[k].Scale.min);
