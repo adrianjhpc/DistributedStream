@@ -1,20 +1,23 @@
-SRCMPI	= streams_persistent_memory_task.c streams_write_persistent_memory_task.c streams_read_persistent_memory_task.c streams_memkind_memory_task.c streams_memory_task.c main_program.c 
+SRCTEST = test_hostname_hashing.c utilities.c
+SRCMPI	= streams_memory_task.c utilities.c main_program.c 
 
 OBJMPI	=$(SRCMPI:.c=.o)
+OBJTEST =$(SRCTEST:.c=.o)
 
-CC	= mpiicc
+CC	= mpicc
 #PP     = -DLAST_LEVEL_CACHE_SIZE=8600000000 -DNTIMES=5
-PP	= -DPMEM -DLAST_LEVEL_CACHE_SIZE=100000000 -DNTIMES=10#-DLAST_LEVEL_CACHE_SIZE=11100000000 -DNTIMES=5#-DLAST_LEVEL_CACHE_SIZE=30000000 -DNTIMES=10 #-DLAST_LEVEL_CACHE_SIZE=10000000 -DNTIMES=20  
+PP	= -DLAST_LEVEL_CACHE_SIZE=200000000 -DNTIMES=10#-DLAST_LEVEL_CACHE_SIZE=11100000000 -DNTIMES=5#-DLAST_LEVEL_CACHE_SIZE=30000000 -DNTIMES=10 #-DLAST_LEVEL_CACHE_SIZE=10000000 -DNTIMES=20  
 
-MXMLINC=-I/home/nx01/nx01/adrianj/mxml/include
-MXMLLIB=-L/home/nx01/nx01/adrianj/mxml/lib -lmxml
+MXMLINC=-I/lustre/home/z04/adrianj/mxml/include
+MXMLLIB=-L/lustre/home/z04/adrianj/mxml -lmxml
 
 LDFLAGS = -fopenmp
-CFLAGS = -g -fopenmp -O3 -ffreestanding -I/home/software/memkind/1.9.0/include $(MXMLINC)  $(PP)
-#CFLAGS  = -fopenmp -O3 -ffreestanding -qopt-streaming-stores always -I/home/software/memkind/1.9.0/include  $(PP)
-LIBS    = -L/home/nx01/nx01/adrianj/pmdk/1.6/lib -lpmem -L/home/software/memkind/1.9.0/lib -lmemkind $(MXMLLIB) 
+#CFLAGS = -g -fopenmp -ffreestanding $(MXMLINC)  $(PP)
+CFLAGS  = -fopenmp -O3 -ffreestanding -qopt-streaming-stores always $(MXMLINC)  $(PP)
+LIBS    =  $(MXMLLIB) 
 
 PRGMPI	= distributed_streams
+PRGTEST = test_hostname_hashing
 
 main:	$(PRGMPI) 
 
@@ -24,5 +27,8 @@ main:	$(PRGMPI)
 $(PRGMPI):$(OBJMPI) Makefile definitions.h
 	$(CC) $(LDFLAGS) -o $@ $(OBJMPI) $(LIBS)
 
+$(PRGTEST):$(OBJTEST) Makefile definitions.h
+	$(CC) $(LDFLAGS) -o $@ $(OBJTEST) 
+
 clean:
-	rm -fr $(TMP) $(OBJMPI) $(PRGMPI) core
+	rm -fr $(TMP) $(OBJMPI) $(OBJTEST) $(PRGMPI) $(PRGTEST) core

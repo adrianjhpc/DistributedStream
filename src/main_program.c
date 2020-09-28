@@ -1,4 +1,5 @@
 #include "definitions.h"
+#include "utilities.h"
 
 int main(int argc, char **argv){
 
@@ -86,8 +87,9 @@ int main(int argc, char **argv){
   initialise_benchmark_results(&b_results);
 
   stream_memory_task(&b_results, world_comm, node_comm, &array_size);
+  printf("Done streams_memory_task\n");
   collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
-
+  printf("Done collect_results\n");
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
     strcpy(filename, "memory_results.dat");
@@ -338,6 +340,8 @@ void collect_individual_result(performance_result indivi, performance_result *re
   temp_store = temp_store/(NTIMES-1);
   node_result->avg = temp_store;
 
+  printf("aa\n");
+
   if(node_comm.rank == root){
     temp_value = node_result->avg;
     MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, root, root_comm.comm);
@@ -349,6 +353,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
   }
 
+  printf("bb\n");
 
   iloc.value = indivi.max;
   iloc.rank = world_comm.rank;
@@ -362,9 +367,11 @@ void collect_individual_result(performance_result indivi, performance_result *re
     MPI_Ssend(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, 0, world_comm.comm);
   }else if(world_comm.rank == root && rloc.rank != root){
     MPI_Recv(max_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, rloc.rank, 0, world_comm.comm, &status);
-  }else if(rloc.rank == root){
+  }else if(world_comm.rank == root && rloc.rank == root){
     strcpy(max_name, name);
   }
+
+  printf("cc\n");
 
   // Get the total max value across all processes in a node for each repeat of the benchmark to enable calculation
   // of the minimum and maximum bandwidth seen within a node. The minimum bandwidth will be the longest time 
@@ -389,6 +396,8 @@ void collect_individual_result(performance_result indivi, performance_result *re
   node_result->max = max_time_store;
   node_result->min = min_time_store;
 
+  printf("dd\n");
+
   // Get the total max and min value across all the nodes
   // For the max we want the slowest node (i.e. the MPI_MAX of the max)
   // For the min we want the fastest node (i.e. the MPI_MIN of the min)
@@ -409,10 +418,14 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
   }
 
+  printf("ee\n");
+
   iloc.value = indivi.min;
   iloc.rank = world_comm.rank;
   MPI_Allreduce(&iloc, &rloc, 1, MPI_DOUBLE_INT, MPI_MINLOC, world_comm.comm);
   result->min = rloc.value;
+
+  printf("ff\n");
 
   if(node_comm.rank == root){
     switch (benchmark){
@@ -451,6 +464,8 @@ void collect_individual_result(performance_result indivi, performance_result *re
       strcpy(all_node_results[k].name, node_names[k]);
     }
   }
+
+  printf("gg\n");
 
 }
 
@@ -665,76 +680,3 @@ void save_results(char *filename, benchmark_results *all_node_results, int array
   return;
 
 }
-
-// The routine convert a string (name) into a number
-// for use in a MPI_Comm_split call (where the number is
-// known as a colour). It is effectively a hashing function
-// for strings but is not necessarily robust (i.e. does not
-// guarantee it is collision free) for all strings, but it
-// should be reasonable for strings that different by small
-// amounts (i.e the name of nodes where they different by a
-// number of set of numbers and letters, for instance
-// login01,login02..., or cn01q94,cn02q43, etc...)
-int name_to_colour(const char *name){
-  int res;
-  int multiplier = 131;
-  const char *p;
-
-  res = 0;
-  for(p=name; *p ; p++){
-    // Guard against integer overflow.
-    if (multiplier > 0 && (res + *p) > (INT_MAX / multiplier)) {
-      // If overflow looks likely (due to the calculation above) then
-      // simply flip the result to make it negative
-      res = -res;
-    }else{
-      // If overflow is not going to happen then undertake the calculation
-      res = (multiplier*res);
-    }
-    // Add on the new character here.
-    res = res + *p;
-  }
-  // If we have ended up with a negative result, invert it to make it positive because
-  // the functionality (in MPI) that we will use this for requires the int to be positive.
-  if( res < 0 ){
-    res = -res;
-  }
-  return res;
-}
-
-// Get an integer key for a process based on the name of the
-// node this process is running on. This is useful for creating
-// communicators for all the processes running on a node.
-int get_key(){
-
-  char name[MPI_MAX_PROCESSOR_NAME];
-  int len;
-  int lpar_key;
-
-  MPI_Get_processor_name(name, &len);
-  lpar_key = name_to_colour(name);
-
-  return lpar_key;
-
-}
-
-#if defined(__aarch64__)
-// TODO: This might be general enough to provide the functionality for any system
-// regardless of processor type given we aren't worried about thread/process migration.
-// Test on Intel systems and see if we can get rid of the architecture specificity
-// of the code.
-unsigned long get_processor_and_core(int *chip, int *core){
-  return syscall(SYS_getcpu, core, chip, NULL);
-}
-// TODO: Add in AMD function
-#else
-// If we're not on an ARM processor assume we're on an intel processor and use the
-// rdtscp instruction.
-unsigned long get_processor_and_core(int *chip, int *core){
-  unsigned long a,d,c;
-  __asm__ volatile("rdtscp" : "=a" (a), "=d" (d), "=c" (c));
-  *chip = (c & 0xFFF000)>>12;
-  *core = c & 0xFFF;
-  return ((unsigned long)a) | (((unsigned long)d) << 32);;
-}
-#endif
