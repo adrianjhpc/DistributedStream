@@ -348,9 +348,14 @@ void collect_individual_result(performance_result indivi, performance_result *re
     if(world_comm.rank == root){
       node_result->avg = temp_result/root_comm.size;
     }
+    printf("%lf\n",temp_value);
     MPI_Gather(&temp_value, 1, MPI_DOUBLE, &average_for_nodes, 1, MPI_DOUBLE, root, root_comm.comm);
     MPI_Gather(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, &node_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, root_comm.comm);
-
+    if(world_comm.rank == root){
+          for(k=0; k<root_comm.size; k++){
+        printf("avg for nodes %lf\n", average_for_nodes[k]);
+         } 
+    }
   }
 
   printf("bb\n");
@@ -490,7 +495,6 @@ void initialise_benchmark_results(benchmark_results *b_results){
   b_results->Triad.min = FLT_MAX;
   b_results->Triad.max= 0;
   b_results->Triad.raw_result = malloc(NTIMES * sizeof(double));
-
   MPI_Get_processor_name(b_results->name, &name_length);
 
 }
@@ -649,6 +653,7 @@ void save_results(char *filename, benchmark_results *all_node_results, int array
     mxmlNewReal(individual_result, all_node_results[k].Copy.max);
     node = mxmlNewElement(result, "Scale");
     individual_result = mxmlNewElement(node, "Average");
+    printf("Scale average %lf\n", all_node_results[k].Scale.avg);
     mxmlNewReal(individual_result, all_node_results[k].Scale.avg);
     individual_result = mxmlNewElement(node, "Minimum");
     mxmlNewReal(individual_result, all_node_results[k].Scale.min);
