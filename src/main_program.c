@@ -308,10 +308,10 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
   int k;
 
-  double max_for_nodes[node_comm.size];
-  double min_for_nodes[node_comm.size];
-  double average_for_nodes[node_comm.size];
-  char node_names[node_comm.size][MPI_MAX_PROCESSOR_NAME];
+  double max_for_nodes[root_comm.size];
+  double min_for_nodes[root_comm.size];
+  double average_for_nodes[root_comm.size];
+  char node_names[root_comm.size][MPI_MAX_PROCESSOR_NAME];
 
   // Variable for the result of the reduction
   resultloc rloc;
