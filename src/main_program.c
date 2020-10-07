@@ -7,6 +7,7 @@ int main(int argc, char **argv){
   int node_key;
   int array_size;
   int socket, core;
+  int omp_threads;
   int performing_persistent = 0;
   int performing_memkind = 0;
   benchmark_results b_results;
@@ -90,7 +91,11 @@ int main(int argc, char **argv){
 
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
-    strcpy(filename, "memory_results.dat");
+#pragma omp parallel default(shared)
+  {
+    omp_threads = omp_get_num_threads();
+  }
+    sprintf(filename, "memory_results-%dx%d.dat", node_comm.size, omp_threads); 
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
 
@@ -308,10 +313,10 @@ void collect_individual_result(performance_result indivi, performance_result *re
 
   int k;
 
-  double max_for_nodes[node_comm.size];
-  double min_for_nodes[node_comm.size];
-  double average_for_nodes[node_comm.size];
-  char node_names[node_comm.size][MPI_MAX_PROCESSOR_NAME];
+  double max_for_nodes[root_comm.size];
+  double min_for_nodes[root_comm.size];
+  double average_for_nodes[root_comm.size];
+  char node_names[root_comm.size][MPI_MAX_PROCESSOR_NAME];
 
   // Variable for the result of the reduction
   resultloc rloc;
@@ -344,14 +349,8 @@ void collect_individual_result(performance_result indivi, performance_result *re
     if(world_comm.rank == root){
       node_result->avg = temp_result/root_comm.size;
     }
-    printf("%lf\n",temp_value);
     MPI_Gather(&temp_value, 1, MPI_DOUBLE, &average_for_nodes, 1, MPI_DOUBLE, root, root_comm.comm);
     MPI_Gather(name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, &node_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, root, root_comm.comm);
-    if(world_comm.rank == root){
-          for(k=0; k<root_comm.size; k++){
-        printf("avg for nodes %lf\n", average_for_nodes[k]);
-         } 
-    }
   }
 
 
@@ -614,13 +613,13 @@ void save_results(char *filename, benchmark_results *all_node_results, int array
   node =  mxmlNewElement(hardware, "number_of_nodes");
   mxmlNewInteger(node, root_comm.size);
   node =  mxmlNewElement(hardware, "copy_size");
-  mxmlNewInteger(node, copy_size);
+  mxmlNewReal(node, (float)copy_size);
   node =  mxmlNewElement(hardware, "scale_size");
-  mxmlNewInteger(node, scale_size);
+  mxmlNewReal(node, (float)scale_size);
   node =  mxmlNewElement(hardware, "add_size");
-  mxmlNewInteger(node, add_size);
+  mxmlNewReal(node, (float)add_size);
   node =  mxmlNewElement(hardware, "triad_size");
-  mxmlNewInteger(node, triad_size);
+  mxmlNewReal(node, (float)triad_size);
 
 
 
@@ -638,7 +637,6 @@ void save_results(char *filename, benchmark_results *all_node_results, int array
     mxmlNewReal(individual_result, all_node_results[k].Copy.max);
     node = mxmlNewElement(result, "Scale");
     individual_result = mxmlNewElement(node, "Average");
-    printf("Scale average %lf\n", all_node_results[k].Scale.avg);
     mxmlNewReal(individual_result, all_node_results[k].Scale.avg);
     individual_result = mxmlNewElement(node, "Minimum");
     mxmlNewReal(individual_result, all_node_results[k].Scale.min);
@@ -680,31 +678,20 @@ void save_results(char *filename, benchmark_results *all_node_results, int array
 // amounts (i.e the name of nodes where they different by a
 // number of set of numbers and letters, for instance
 // login01,login02..., or cn01q94,cn02q43, etc...)
-int name_to_colour(const char *name){
-  int res;
-  int multiplier = 131;
-  const char *p;
-
-  res = 0;
-  for(p=name; *p ; p++){
-    // Guard against integer overflow.
-    if (multiplier > 0 && (res + *p) > (INT_MAX / multiplier)) {
-      // If overflow looks likely (due to the calculation above) then
-      // simply flip the result to make it negative
-      res = -res;
-    }else{
-      // If overflow is not going to happen then undertake the calculation
-      res = (multiplier*res);
+int name_to_colour(const char *name) {
+    int small_multiplier = 31;
+    int large_multiplier = 1e9 + 9;
+    int res = 0;
+    int power = 1;
+    const char *p;
+    for(p=name; *p ; p++){
+        res = (res + (*p + 1) * power) % large_multiplier;
+        if(res < 0){
+                res = - res;
+        }
+        power = (power * small_multiplier) % large_multiplier;
     }
-    // Add on the new character here.
-    res = res + *p;
-  }
-  // If we have ended up with a negative result, invert it to make it positive because
-  // the functionality (in MPI) that we will use this for requires the int to be positive.
-  if( res < 0 ){
-    res = -res;
-  }
-  return res;
+    return res;
 }
 
 // Get an integer key for a process based on the name of the
@@ -718,7 +705,6 @@ int get_key(){
 
   MPI_Get_processor_name(name, &len);
   lpar_key = name_to_colour(name);
-
   return lpar_key;
 
 }
