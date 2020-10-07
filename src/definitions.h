@@ -1,15 +1,6 @@
-#include <mpi.h>
-#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <float.h>
-#include <string.h>
-#include <sys/sysinfo.h>
-#include <mxml.h>
-#if defined(__aarch64__)
-#include <sys/syscall.h>
-#endif
+#include <mpi.h>
 
 #ifndef STREAM_TYPE
 #define STREAM_TYPE double
@@ -88,9 +79,6 @@ typedef enum {
   triad
 } benchmark_type;
 
-int name_to_colour(const char *);
-int get_key();
-unsigned long get_processor_and_core(int *chip, int *core);
 int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
 #ifdef PMEM
 int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket);
