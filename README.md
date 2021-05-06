@@ -16,10 +16,13 @@ MXMLLIB=-L${HOME}/mxml/lib -lmxml
 If you want to build with persistent memory functionality then the [https://github.com/pmem/pmdk/](PMDK)  and [https://github.com/memkind/memkind](memkind) libraries should also be installed. Depending upon how you install these libraries you may have to alter the Makefile for a successful build.
 
 ## Building
-By default the non-persistent memory version is built, producing a single exectuable (`distributed_streams`) when the `make` command is run. You may need to alter this line in the Makefile to choose an appropriate compiler for you system:
+By default the non-persistent memory version is built, producing a single exectuable (`distributed_streams`) when the `make` command is run. You will need to add a compiler to the makefile by altering this line in the Makefile to choose an appropriate compiler for you system:
 
 ```
-CC      = cc
+CC      = 
 ```
 
-Should you wish to build the persistent memory version of the benchmark you can use the command `make distributed_streams_pmem` which will produce an exectuablec named `distributed_streams_pmem`. 
+Should you wish to build the persistent memory version of the benchmark you can use the command `make distributed_streams_pmem` which will produce an executable named `distributed_streams_pmem`, or `make distributed_streams_memkind` which will produce an exectuable named `distributed_streams_memkind`. These require the PMDK library `lpmem` and the Memkind library `lmemkind` respectively. The library and header paths for these libraries can be added to the Makefile if required.
+
+##Running
+
