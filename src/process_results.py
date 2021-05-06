@@ -67,6 +67,10 @@ def main():
 
     doc = xml.dom.minidom.parse(filename)
 
+    experiment = doc.getElementsByTagName("experiment")
+    experiment_name = experiment[0].firstChild.nodeValue
+    experiment_name = experiment_name.split(".")[0]
+
     configuration = doc.getElementsByTagName("configuration")
     for element in configuration:
         procs_per_node_element = element.getElementsByTagName("processes_per_node")
@@ -76,14 +80,15 @@ def main():
         nodes_used_element = element.getElementsByTagName("number_of_nodes")
         nodes_used = int(nodes_used_element[0].firstChild.nodeValue)
         nodes_used_element = element.getElementsByTagName("copy_size")
-        copy_size = int(nodes_used_element[0].firstChild.nodeValue)
+        copy_size = int(nodes_used_element[0].firstChild.nodeValue)/1024
         nodes_used_element = element.getElementsByTagName("scale_size")
-        scale_size = int(nodes_used_element[0].firstChild.nodeValue)
+        scale_size = int(nodes_used_element[0].firstChild.nodeValue)/1024
         nodes_used_element = element.getElementsByTagName("add_size")
-        add_size = int(nodes_used_element[0].firstChild.nodeValue)
+        add_size = int(nodes_used_element[0].firstChild.nodeValue)/1024
         nodes_used_element = element.getElementsByTagName("triad_size")
-        triad_size = int(nodes_used_element[0].firstChild.nodeValue)
+        triad_size = int(nodes_used_element[0].firstChild.nodeValue)/1024
 
+    experiment_name = experiment_name + "_" + str(procs_per_node) + "x" + str(threads_per_proc) + "_"
 
     print(str(procs_per_node) + " processes, each with " + str(threads_per_proc) + " thread(s) on a total of " + str(nodes_used) + " nodes.")
 
@@ -110,6 +115,10 @@ def main():
     i = 0
     j = 0
     nodes = doc.getElementsByTagName("node")
+    # Calculate the bandwidths from the recorded times and data sizes
+    # The reason we use "Maximum" to set the min value and vice versa
+    # is because the stored data are times, so the maximum runtime 
+    # corresponds to the minimum bandwdith etc...
     for node in nodes:
         if(j == y):
             print("Error, too many nodes added")
@@ -121,33 +130,33 @@ def main():
             avg = result.getElementsByTagName("Average")
             copy_avg[i,j] = (1E-6*procs_per_node*copy_size)/float(avg[0].firstChild.nodeValue)
             min = result.getElementsByTagName("Minimum")
-            copy_min[i,j] = (1E-6*procs_per_node*copy_size)/float(min[0].firstChild.nodeValue)
+            copy_max[i,j] = (1E-6*procs_per_node*copy_size)/float(min[0].firstChild.nodeValue)
             max = result.getElementsByTagName("Maximum")
-            copy_max[i,j] = (1E-6*procs_per_node*copy_size)/float(max[0].firstChild.nodeValue)
+            copy_min[i,j] = (1E-6*procs_per_node*copy_size)/float(max[0].firstChild.nodeValue)
         scale = node.getElementsByTagName("Scale")
         for result in scale:
             avg = result.getElementsByTagName("Average")
             scale_avg[i,j] = (1E-6*procs_per_node*scale_size)/float(avg[0].firstChild.nodeValue)
             min = result.getElementsByTagName("Minimum")
-            scale_min[i,j] = (1E-6*procs_per_node*scale_size)/float(min[0].firstChild.nodeValue)
+            scale_max[i,j] = (1E-6*procs_per_node*scale_size)/float(min[0].firstChild.nodeValue)
             max = result.getElementsByTagName("Maximum")
-            scale_max[i,j] = (1E-6*procs_per_node*scale_size)/float(max[0].firstChild.nodeValue)
+            scale_min[i,j] = (1E-6*procs_per_node*scale_size)/float(max[0].firstChild.nodeValue)
         add = node.getElementsByTagName("Add")
         for result in add:
             avg = result.getElementsByTagName("Average")
             add_avg[i,j] = (1E-6*procs_per_node*add_size)/float(avg[0].firstChild.nodeValue)
             min = result.getElementsByTagName("Minimum")
-            add_min[i,j] = (1E-6*procs_per_node*add_size)/float(min[0].firstChild.nodeValue)
+            add_max[i,j] = (1E-6*procs_per_node*add_size)/float(min[0].firstChild.nodeValue)
             max = result.getElementsByTagName("Maximum")
-            add_max[i,j] = (1E-6*procs_per_node*add_size)/float(max[0].firstChild.nodeValue)
+            add_min[i,j] = (1E-6*procs_per_node*add_size)/float(max[0].firstChild.nodeValue)
         triad = node.getElementsByTagName("Triad")
         for result in triad:
             avg = result.getElementsByTagName("Average")
             triad_avg[i,j] = (1E-6*procs_per_node*triad_size)/float(avg[0].firstChild.nodeValue)
             min = result.getElementsByTagName("Minimum")
-            triad_min[i,j] = (1E-6*procs_per_node*triad_size)/float(min[0].firstChild.nodeValue)
+            triad_max[i,j] = (1E-6*procs_per_node*triad_size)/float(min[0].firstChild.nodeValue)
             max = result.getElementsByTagName("Maximum")
-            triad_max[i,j] = (1E-6*procs_per_node*triad_size)/float(max[0].firstChild.nodeValue)
+            triad_min[i,j] = (1E-6*procs_per_node*triad_size)/float(max[0].firstChild.nodeValue)
 
         i = i + 1
         if(i == x):
@@ -179,56 +188,56 @@ def main():
     min = np.nanmin(copy_max)
     np.nan_to_num(copy_max, nan=min)
         
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(copy_avg)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(copy_avg[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(copy_avg[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Copy Average")
     fig.tight_layout()
-    fig.savefig('copy_avg.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'copy_avg.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(copy_min)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(copy_min[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(copy_min[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Copy Minimum")
     fig.tight_layout()
-    fig.savefig('copy_min.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'copy_min.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(copy_max)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(copy_max[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(copy_max[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Copy Maximum")
     fig.tight_layout()
-    fig.savefig('copy_max.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'copy_max.png', dpi=300)
 
     # Replace NaN values with the minimum actual value in the array (i.e. ignoring NaNs).
     # This is required to deal with empty cells in the heatmap generated by node numbers that 
@@ -240,56 +249,56 @@ def main():
     min = np.nanmin(scale_max)
     np.nan_to_num(scale_max, nan=min)
         
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(scale_avg)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(scale_avg[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(scale_avg[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Scale Average")
     fig.tight_layout()
-    fig.savefig('scale_avg.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'scale_avg.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(scale_min)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(scale_min[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(scale_min[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Scale Minimum")
     fig.tight_layout()
-    fig.savefig('scale_min.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'scale_min.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(scale_max)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(scale_max[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(scale_max[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Scale Maximum")
     fig.tight_layout()
-    fig.savefig('scale_max.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'scale_max.png', dpi=300)
 
     # Replace NaN values with the minimum actual value in the array (i.e. ignoring NaNs).
     # This is required to deal with empty cells in the heatmap generated by node numbers that 
@@ -301,56 +310,56 @@ def main():
     min = np.nanmin(add_max)
     np.nan_to_num(add_max, nan=min)
         
-    fig, ax = plt.subplots()
-    im = ax.imshow(scale_avg)
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
+    im = ax.imshow(add_avg)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(add_avg[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(add_avg[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Add Average")
     fig.tight_layout()
-    fig.savefig('add_avg.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'add_avg.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(add_min)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(add_min[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(add_min[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Add Minimum")
     fig.tight_layout()
-    fig.savefig('add_min.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'add_min.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(add_max)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(add_max[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(add_max[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Add Maximum")
     fig.tight_layout()
-    fig.savefig('add_max.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'add_max.png', dpi=300)
 
     # Replace NaN values with the minimum actual value in the array (i.e. ignoring NaNs).
     # This is required to deal with empty cells in the heatmap generated by node numbers that 
@@ -362,56 +371,56 @@ def main():
     min = np.nanmin(triad_max)
     np.nan_to_num(triad_max, nan=min)
         
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(triad_avg)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(triad_avg[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(triad_avg[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Triad Average")
     fig.tight_layout()
-    fig.savefig('triad_avg.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'triad_avg.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(triad_min)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(triad_min[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(triad_min[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Triad Minimum")
     fig.tight_layout()
-    fig.savefig('triad_min.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'triad_min.png', dpi=300)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(y*2,x*2))
     im = ax.imshow(triad_max)
     cbar = plt.colorbar(im);
-    cbar.set_label('Bandwidth (MB/s)')
+    cbar.set_label('Bandwidth (GB/s)')
     plt.axis('off')
 
     for i in range(0,y):
         for j in range(0,x):
-            if j+(i*(y-1)) < nodes_used:
-                text = ax.text(j, i, names[i, j] + "\n" + str(round(triad_max[i ,j],0)) + " MB/s", ha="center", va="center", color="b", fontsize=6, wrap=True)
+            if j+(i*x) < nodes_used:
+                text = ax.text(j, i, names[i, j] + "\n" + str(round(triad_max[i ,j],0)) + " GB/s", ha="center", va="center", color="b", fontsize=10, wrap=True)
             else:
                 text = ax.text(j, i, "N/A", ha="center", va="center", color="b")
 
     ax.set_title("STREAM Triad Maximum")
     fig.tight_layout()
-    fig.savefig('triad_max.png', dpi=fig.dpi)
+    fig.savefig(experiment_name + 'triad_max.png', dpi=300)
 
 
 

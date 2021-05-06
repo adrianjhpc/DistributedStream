@@ -14,7 +14,7 @@ MXMLLIB=-L${HOME}/mxml/lib -lmxml
 
 LDFLAGS = -fopenmp
 CFLAGS = $(LDFLAGS) -g  -O3 -ffreestanding -fopenmp $(MXMLINC)  $(PP)
-CFLAGSPMEM = $(CFLAGS) -DPMEM
+CFLAGSPMEM = $(CFLAGS) -DPMEM #-DPMEM_STRIPED
 LIBS    =$(MXMLLIB)
 
 FLAGSPMEM = $(CFLAGS) -DPMEM

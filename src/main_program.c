@@ -135,7 +135,7 @@ int main(int argc, char **argv){
     // processes removing or adding files (as in the persistent memory benchmarks) from
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
-
+ 
     stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none);
     collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
 

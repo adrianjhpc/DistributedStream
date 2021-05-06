@@ -124,7 +124,9 @@ int stream_write_persistent_memory_task(benchmark_results *b_results, communicat
 	//printf ("Number of Threads counted = %i\n",k);
 #endif
 	strcpy(path,"/mnt/pmem_fsdax");
+#ifndef PMEM_STRIPED
 	sprintf(path+strlen(path), "%d", socket);
+#endif
 	sprintf(path+strlen(path), "/");
 
 	// The path+strlen(path) part of the sprintf call below writes the data after the end of the current string
