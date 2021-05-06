@@ -2,20 +2,23 @@ SRCMPI	= streams_memory_task.c main_program.c utilities.c
 
 OBJMPI	=$(SRCMPI:.c=.o)
 
-SRCPMEM  = streams_memkind_memory_task.c streams_persistent_memory_task.c streams_read_persistent_memory_task.c streams_write_persistent_memory_task.c streams_memory_task.c main_program.c utilities.c
+SRCPMEM  = streams_persistent_striped_memory_task.c streams_memkind_memory_task.c streams_persistent_memory_task.c streams_read_persistent_memory_task.c streams_write_persistent_memory_task.c streams_memory_task.c main_program.c utilities.c
 
 OBJPMEM  =$(SRCPMEM:.c=.pmem)
 
-CC      = cc
+CC      = mpiicc
 PP     = -DLAST_LEVEL_CACHE_SIZE=30000000 -DNTIMES=10
 
-MXMLINC=-I/home/z19/z19/adrianj/mxml/3.1/include
-MXMLLIB=-L/home/z19/z19/adrianj/mxml/3.1/lib -lmxml
+MXMLINC=-I${HOME}/mxml/include
+MXMLLIB=-L${HOME}/mxml/lib -lmxml
 
 LDFLAGS = -fopenmp
 CFLAGS = $(LDFLAGS) -g  -O3 -ffreestanding -fopenmp $(MXMLINC)  $(PP)
 CFLAGSPMEM = $(CFLAGS) -DPMEM
 LIBS    =$(MXMLLIB)
+
+FLAGSPMEM = $(CFLAGS) -DPMEM
+LIBSPMEM = $(LIBS) -lpmem -lmemkind
 
 PRGMPI	= distributed_streams
 PRGPMEM = distributed_streams_pmem
@@ -33,7 +36,7 @@ $(PRGMPI):$(OBJMPI) Makefile definitions.h
 	rm -fr *.o
 
 $(PRGPMEM):$(OBJPMEM) Makefile definitions.h
-	$(CC) $(LDFLAGS) -o $@ $(OBJPMEM) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJPMEM) $(LIBSPMEM)
 	rm -fr *.pmem
 
 
