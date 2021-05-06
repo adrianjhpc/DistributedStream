@@ -24,11 +24,6 @@
  *               If the processor and memory are capable of 10 GB/s, this is 2 GB in 200 msec.
  *               This means the each array must be at least 1 GB.
  */
-#ifndef LAST_LEVEL_CACHE_SIZE
-#   define LAST_LEVEL_CACHE_SIZE	1000000
-#endif
-
-
 
 
 /*  Users are allowed to modify the "OFFSET" variable, which *may* change the
@@ -57,13 +52,13 @@ STREAM_TYPE	*a, *b, *c;
 STREAM_TYPE *a_read, *b_read, *c_read;
 
 static double mysecond();
-static void checkSTREAMresults(int array_size);
+static void checkSTREAMresults(int array_size, int repeats);
 static int checktick();
 #ifdef _OPENMP
 extern int omp_get_num_threads();
 #endif
 
-int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket){
+int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats){
 	char path[MAX_FILE_NAME_LENGTH];
 	char *pmemaddr = NULL;
 	int array_element_size;
@@ -75,9 +70,9 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 	ssize_t	j;
 	STREAM_TYPE scalar;
 	long long array_length;
-	double t, times[4][NTIMES];
+	double t, times[4][repeats];
 
-	*array_size = (LAST_LEVEL_CACHE_SIZE*4)/node_comm.size;
+	*array_size = (cache_size*4)/node_comm.size;
 
 	a = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
 	b = malloc(sizeof(STREAM_TYPE)*(*array_size+OFFSET));
@@ -98,7 +93,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 		printf("Total memory required per node = %.1f MiB (= %.1f GiB).\n",
 				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024.),
 				node_comm.size * (3.0 * BytesPerWord) * ( (double) *array_size / 1024.0/1024./1024.));
-		printf("Each kernel will be executed %d times.\n", NTIMES);
+		printf("Each kernel will be executed %d times.\n", repeats);
 		printf("The first iteration is excluded from reported results\n");
 
 		printf("Stream Persistent Memory Task Read Only\n");
@@ -187,10 +182,10 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 	//printf("For best results, please be sure you know the\n");
 	//printf("precision of your system timer.\n");
 
-	/*	--- MAIN LOOP --- repeat test cases NTIMES times --- */
+	/*	--- MAIN LOOP --- repeat test cases repeats times --- */
 
 	scalar = 3.0;
-	for (k=0; k<NTIMES; k++)
+	for (k=0; k<repeats; k++)
 	{
 		// Add in a barrier synchronisation to ensure all processes on a node are undertaking the
 		// benchmark at the same time. This ensures the node level results are fair as all
@@ -259,7 +254,7 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 
 	/*	--- SUMMARY --- */
 	/* note -- skip first iteration */
-	for (k=1; k<NTIMES; k++) {
+	for (k=1; k<repeats; k++) {
 		b_results->Copy.avg = b_results->Copy.avg + times[0][k];
 		b_results->Copy.min = MIN(b_results->Copy.min, times[0][k]);
 		b_results->Copy.max = MAX(b_results->Copy.max, times[0][k]);
@@ -274,14 +269,14 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 		b_results->Triad.max = MAX(b_results->Triad.max, times[3][k]);
 	}
 
-	b_results->Copy.avg = b_results->Copy.avg/(double)(NTIMES-1);
-	b_results->Scale.avg = b_results->Scale.avg/(double)(NTIMES-1);
-	b_results->Add.avg = b_results->Add.avg/(double)(NTIMES-1);
-	b_results->Triad.avg = b_results->Triad.avg/(double)(NTIMES-1);
+	b_results->Copy.avg = b_results->Copy.avg/(double)(repeats-1);
+	b_results->Scale.avg = b_results->Scale.avg/(double)(repeats-1);
+	b_results->Add.avg = b_results->Add.avg/(double)(repeats-1);
+	b_results->Triad.avg = b_results->Triad.avg/(double)(repeats-1);
 
 
 	/* --- Check Results --- */
-	checkSTREAMresults(*array_size);
+	checkSTREAMresults(*array_size, repeats);
 
 	pmem_unmap(pmemaddr, mapped_len);
 	// Delete the file used to store the persistent data on the persistent memory
@@ -339,7 +334,7 @@ static double mysecond(){
 #ifndef abs
 #define abs(a) ((a) >= 0 ? (a) : -(a))
 #endif
-static void checkSTREAMresults (int array_size){
+static void checkSTREAMresults (int array_size, int repeats){
 	STREAM_TYPE aj,bj,cj,scalar;
 	STREAM_TYPE aSumErr,bSumErr,cSumErr;
 	STREAM_TYPE aAvgErr,bAvgErr,cAvgErr;
@@ -355,7 +350,7 @@ static void checkSTREAMresults (int array_size){
 	aj = 2.0E0 * aj;
 	/* now execute timing loop */
 	scalar = 3.0;
-	for (k=0; k<NTIMES; k++)
+	for (k=0; k<repeats; k++)
 	{
 		cj = aj;
 		bj = scalar*cj;

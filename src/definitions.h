@@ -13,24 +13,6 @@
 # define MAX(x,y) ((x)>(y)?(x):(y))
 # endif
 
-/*  STREAM runs each kernel "NTIMES" times and reports the *best* result
- *         for any iteration after the first, therefore the minimum value
- *         for NTIMES is 2.
- *      There are no rules on maximum allowable values for NTIMES, but
- *         values larger than the default are unlikely to noticeably
- *         increase the reported performance.
- *      NTIMES can also be set on the compile line without changing the source
- *         code using, for example, "-DNTIMES=7".
- */
-#ifdef NTIMES
-#if NTIMES<=1
-#   define NTIMES	10
-#endif
-#endif
-#ifndef NTIMES
-#   define NTIMES	10
-#endif
-
 #define ROOT 0
 #define MAX_FILE_NAME_LENGTH 500
 
@@ -79,16 +61,16 @@ typedef enum {
   triad
 } benchmark_type;
 
-int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size);
+int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int cache_size, int repeats);
 #ifdef PMEM
-int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket);
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level);
-int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level);
-int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket);
+int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats);
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats);
+int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats);
+int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats);
 #endif
-void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm);
-void initialise_benchmark_results(benchmark_results *b_results);
+void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm, int repeats);
+void initialise_benchmark_results(benchmark_results *b_results, int repeats);
 void free_benchmark_results(benchmark_results *b_results);
-void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, benchmark_results *all_node_results, benchmark_type benchmark, communicator world_comm, communicator node_comm, communicator root_comm);
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, benchmark_results *all_node_results, benchmark_type benchmark, communicator world_comm, communicator node_comm, communicator root_comm, int repeats);
 void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm);
 void save_results(char *filename, benchmark_results *all_node_results, int array_size, communicator world_comm, communicator node_comm, communicator root_comm);

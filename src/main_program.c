@@ -11,6 +11,8 @@ int main(int argc, char **argv){
   int omp_threads;
   int performing_persistent = 0;
   int performing_memkind = 0;
+  int cache_size = 0;
+  int repeats = 0;
   benchmark_results b_results;
   aggregate_results node_results;
   benchmark_results *all_node_results;
@@ -20,17 +22,36 @@ int main(int argc, char **argv){
 
   filename = (char *)malloc(sizeof(char)*MAX_FILE_NAME_LENGTH);
 
-#ifdef PMEM
-  if(argc != 3){
-    printf("Expecting two parameters (each 0 or 1) specifying whether memkind memory and/or persistent memory tasks should be run\n");
+
+  if(argc < 3){
+    printf("Expecting parameters specifying the size of the last level cache and the number of times to run each benchmark to be provided at runtime.\n");
     exit(0);
   }else{
-    performing_memkind = atoi(argv[1]);
+    cache_size = atoi(argv[1]);
+    if(cache_size < 1){
+      printf("Expecting a numerical parameter greater than 0 for the last level cache size. Current parameter is %d.\n", cache_size);
+      exit(0);
+    }
+    repeats = atoi(argv[2]);
+    if(repeats < 0){
+      printf("Expecting a numerical parameter greater than 0 for the number of times to repeat each benchmark. Current parameter is %d.\n", repeats);
+      exit(0);
+    }
+
+
+  } 
+
+#ifdef PMEM
+  if(argc != 5){
+    printf("As well as the parameters specifying the size of the last level of cache and the number of times to run each benchmark I am expecting two parameters (each 0 or 1) specifying whether memkind memory and/or persistent memory tasks should be run\n");
+    exit(0);
+  }else{
+    performing_memkind = atoi(argv[3]);
     if(performing_memkind != 0 && performing_memkind != 1){
       printf("Expecting a parameter (0 or 1) specifying whether memkind memory tasks should be run. Current parameter is not 0 or 1.\n");
       exit(0);
     }
-    performing_persistent = atoi(argv[2]);
+    performing_persistent = atoi(argv[4]);
     if(performing_persistent != 0 && performing_persistent != 1){
       printf("Expecting a parameter (0 or 1) specifying whether persistent memory tasks should be run. Current parameter is not 0 or 1.\n");
       exit(0);
@@ -85,10 +106,10 @@ int main(int argc, char **argv){
 
   get_processor_and_core(&socket, &core);
 
-  initialise_benchmark_results(&b_results);
+  initialise_benchmark_results(&b_results, repeats);
 
-  stream_memory_task(&b_results, world_comm, node_comm, &array_size);
-  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+  stream_memory_task(&b_results, world_comm, node_comm, &array_size, cache_size, repeats);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
 #pragma omp parallel default(shared)
@@ -104,7 +125,7 @@ int main(int argc, char **argv){
 
   if(performing_memkind == 1){
 #ifdef PMEM
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -112,8 +133,8 @@ int main(int argc, char **argv){
     // processes removing or adding files (as in the persistent memory benchmarks) from
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
-    stream_memkind_memory_task(&b_results, world_comm, node_comm, &array_size, socket);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+    stream_memkind_memory_task(&b_results, world_comm, node_comm, &array_size, socket, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -127,7 +148,7 @@ int main(int argc, char **argv){
 
   if(performing_persistent == 1){
 #ifdef PMEM
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -136,8 +157,8 @@ int main(int argc, char **argv){
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
  
-    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -148,7 +169,7 @@ int main(int argc, char **argv){
     free_benchmark_results(&b_results);
 
  
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -157,8 +178,8 @@ int main(int argc, char **argv){
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
 
-    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -168,7 +189,7 @@ int main(int argc, char **argv){
 
     free_benchmark_results(&b_results);
 
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -177,8 +198,8 @@ int main(int argc, char **argv){
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
 
-    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -190,7 +211,7 @@ int main(int argc, char **argv){
 
 
 
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -199,8 +220,8 @@ int main(int argc, char **argv){
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
 
-    stream_read_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+    stream_read_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -211,7 +232,7 @@ int main(int argc, char **argv){
     free_benchmark_results(&b_results);
 
 
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -220,8 +241,8 @@ int main(int argc, char **argv){
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
 
-    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -233,7 +254,7 @@ int main(int argc, char **argv){
     free_benchmark_results(&b_results);
 
  
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -242,8 +263,8 @@ int main(int argc, char **argv){
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
 
-    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm);
+    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -253,7 +274,7 @@ int main(int argc, char **argv){
 
     free_benchmark_results(&b_results);
 
-    initialise_benchmark_results(&b_results);
+    initialise_benchmark_results(&b_results, repeats);
 
     // Barrier here to ensure all processes are active and ready to start benchmarking
     // For performance results we only really need a per node barrier to ensure all
@@ -262,8 +283,8 @@ int main(int argc, char **argv){
     // previous runs of the program.
     MPI_Barrier(world_comm.comm);
 
-    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective);
-    collect_results(b_results, &a_results, &node_results, all_node_results,  world_comm, node_comm, root_comm);
+    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective, cache_size, repeats);
+    collect_results(b_results, &a_results, &node_results, all_node_results,  world_comm, node_comm, root_comm, repeats);
 
     if(world_comm.rank == ROOT){
       print_results(a_results, node_results, world_comm, array_size, node_comm);
@@ -284,22 +305,22 @@ int main(int argc, char **argv){
 
 }
 
-void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm){
+void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm, int repeats){
 
   benchmark_type benchmark;
 
   benchmark = copy;
-  collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm);
+  collect_individual_result(b_results.Copy, &a_results->Copy, &node_results->Copy, a_results->copy_max, b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm, repeats);
   benchmark = scale;
-  collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max,  b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm);
+  collect_individual_result(b_results.Scale, &a_results->Scale, &node_results->Scale, a_results->scale_max,  b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm, repeats);
   benchmark = add;
-  collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm);
+  collect_individual_result(b_results.Add, &a_results->Add, &node_results->Add, a_results->add_max, b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm, repeats);
   benchmark = triad;
-  collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm);
+  collect_individual_result(b_results.Triad, &a_results->Triad, &node_results->Triad, a_results->triad_max, b_results.name, all_node_results, benchmark, world_comm, node_comm, root_comm, repeats);
 
 }
 
-void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, benchmark_results *all_node_results, benchmark_type benchmark, communicator world_comm, communicator node_comm, communicator root_comm){
+void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, benchmark_results *all_node_results, benchmark_type benchmark, communicator world_comm, communicator node_comm, communicator root_comm, int repeats){
 
   // Structure to hold both a value and a rank for MAXLOC and MINLOC operations.
   // This *may* be problematic on some MPI implementations as it assume MPI_DOUBLE_INT
@@ -337,13 +358,13 @@ void collect_individual_result(performance_result indivi, performance_result *re
   // Get the total avg value summed across all processes in a node to enable calculation
   // of the avg bandwidth for a node.
   temp_store = 0;
-  for(k=1; k<NTIMES; k++) {
+  for(k=1; k<repeats; k++) {
     temp_value = indivi.raw_result[k];
     MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_SUM, root, node_comm.comm);
     temp_result = temp_result/node_comm.size;
     temp_store = temp_store + temp_result;
   }
-  temp_store = temp_store/(NTIMES-1);
+  temp_store = temp_store/(repeats-1);
   node_result->avg = temp_store;
 
 
@@ -384,7 +405,7 @@ void collect_individual_result(performance_result indivi, performance_result *re
   // represents the slowest part of that run and therefore the limit on the bandwith achieved.
   max_time_store = 0;
   min_time_store = FLT_MAX;
-  for(k=1; k<NTIMES; k++) {
+  for(k=1; k<repeats; k++) {
     temp_value = indivi.raw_result[k];
     MPI_Reduce(&temp_value, &temp_result, 1, MPI_DOUBLE, MPI_MAX, root, node_comm.comm);
     if(temp_result > max_time_store){
@@ -468,26 +489,26 @@ void collect_individual_result(performance_result indivi, performance_result *re
 }
 
 // Initialise the benchmark results structure to enable proper collection of data
-void initialise_benchmark_results(benchmark_results *b_results){
+void initialise_benchmark_results(benchmark_results *b_results, int repeats){
 
   int name_length;
 
   b_results->Copy.avg = 0;
   b_results->Copy.min = FLT_MAX;
   b_results->Copy.max= 0;
-  b_results->Copy.raw_result = malloc(NTIMES * sizeof(double));
+  b_results->Copy.raw_result = malloc(repeats * sizeof(double));
   b_results->Scale.avg = 0;
   b_results->Scale.min = FLT_MAX;
   b_results->Scale.max= 0;
-  b_results->Scale.raw_result = malloc(NTIMES * sizeof(double));
+  b_results->Scale.raw_result = malloc(repeats * sizeof(double));
   b_results->Add.avg = 0;
   b_results->Add.min = FLT_MAX;
   b_results->Add.max= 0;
-  b_results->Add.raw_result = malloc(NTIMES * sizeof(double));
+  b_results->Add.raw_result = malloc(repeats * sizeof(double));
   b_results->Triad.avg = 0;
   b_results->Triad.min = FLT_MAX;
   b_results->Triad.max= 0;
-  b_results->Triad.raw_result = malloc(NTIMES * sizeof(double));
+  b_results->Triad.raw_result = malloc(repeats * sizeof(double));
   MPI_Get_processor_name(b_results->name, &name_length);
 
 }

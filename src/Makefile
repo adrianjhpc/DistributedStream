@@ -2,12 +2,12 @@ SRCMPI	= streams_memory_task.c main_program.c utilities.c
 
 OBJMPI	=$(SRCMPI:.c=.o)
 
-SRCPMEM  = streams_persistent_striped_memory_task.c streams_memkind_memory_task.c streams_persistent_memory_task.c streams_read_persistent_memory_task.c streams_write_persistent_memory_task.c streams_memory_task.c main_program.c utilities.c
+SRCPMEM  = streams_memkind_memory_task.c streams_persistent_memory_task.c streams_read_persistent_memory_task.c streams_write_persistent_memory_task.c streams_memory_task.c main_program.c utilities.c
 
 OBJPMEM  =$(SRCPMEM:.c=.pmem)
 
-CC      = mpiicc
-PP     = -DLAST_LEVEL_CACHE_SIZE=30000000 -DNTIMES=10
+CC     = mpiicc
+PP     = 
 
 MXMLINC=-I${HOME}/mxml/include
 MXMLLIB=-L${HOME}/mxml/lib -lmxml
