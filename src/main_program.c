@@ -279,6 +279,9 @@ int main(int argc, char **argv){
 
   free(all_node_results);
   free(filename);
+
+  return 0;
+
 }
 
 void collect_results(benchmark_results b_results, aggregate_results *a_results, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm){
