@@ -9,8 +9,6 @@ int main(int argc, char **argv){
   int array_size;
   int socket, core;
   int omp_threads;
-  int performing_persistent = 0;
-  int performing_memkind = 0;
   int cache_size = 0;
   int repeats = 0;
   benchmark_results b_results;
@@ -19,6 +17,7 @@ int main(int argc, char **argv){
   aggregate_results a_results;
   communicator world_comm, node_comm, root_comm;
   char *filename;
+  char *pmem_path;
 
   filename = (char *)malloc(sizeof(char)*MAX_FILE_NAME_LENGTH);
 
@@ -41,25 +40,14 @@ int main(int argc, char **argv){
 
   } 
 
-#ifdef PMEM
-  if(argc != 5){
-    printf("As well as the parameters specifying the size of the last level of cache and the number of times to run each benchmark I am expecting two parameters (each 0 or 1) specifying whether memkind memory and/or persistent memory tasks should be run\n");
+#if defined(PMEM) || defined(MEMKIND)
+  if(argc != 4){
+    printf("As well as the parameters specifying the size of the last level of cache and the number of times to run each benchmark I am expecting a parameter specifying the path to the persistent memory to be used.\n");
     exit(0);
   }else{
-    performing_memkind = atoi(argv[3]);
-    if(performing_memkind != 0 && performing_memkind != 1){
-      printf("Expecting a parameter (0 or 1) specifying whether memkind memory tasks should be run. Current parameter is not 0 or 1.\n");
-      exit(0);
-    }
-    performing_persistent = atoi(argv[4]);
-    if(performing_persistent != 0 && performing_persistent != 1){
-      printf("Expecting a parameter (0 or 1) specifying whether persistent memory tasks should be run. Current parameter is not 0 or 1.\n");
-      exit(0);
-    }
+    pmem_path = malloc(strlen(argv[0])*sizeof(char));
+    strcpy(pmem_path, argv[3]);
   }
-#else
-  performing_persistent = 0;
-  performing_memkind = 0;
 #endif
 
   MPI_Init(&argc, &argv);
@@ -123,183 +111,178 @@ int main(int argc, char **argv){
   free_benchmark_results(&b_results);
 
 
-  if(performing_memkind == 1){
-#ifdef PMEM
-    initialise_benchmark_results(&b_results, repeats);
-
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
-    stream_memkind_memory_task(&b_results, world_comm, node_comm, &array_size, socket, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
-
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "memkind_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
- 
-    free_benchmark_results(&b_results);
+#ifdef MEMKIND
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+  stream_memkind_memory_task(&b_results, world_comm, node_comm, &array_size, socket, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
+  
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "memkind_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
+  }
+  
+  free_benchmark_results(&b_results);
 #endif
+
+
+#ifdef PMEM
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+  
+  stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
+  
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "persistent_memory_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
+  }
+  
+  free_benchmark_results(&b_results);
+  
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+  
+  stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
+  
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "individual_persistent_memory_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
+  }
+  
+  free_benchmark_results(&b_results);
+  
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+  
+  stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
+  
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "collective_persistent_memory_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
+  }
+  
+  free_benchmark_results(&b_results);
+ 
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+
+  stream_read_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
+
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "read_persistent_memory_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
 
-  if(performing_persistent == 1){
-#ifdef PMEM
-    initialise_benchmark_results(&b_results, repeats);
+  free_benchmark_results(&b_results);
 
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
- 
-    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+  
+  stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
 
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "persistent_memory_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
-
-    free_benchmark_results(&b_results);
-
- 
-    initialise_benchmark_results(&b_results, repeats);
-
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
-
-    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
-
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "individual_persistent_memory_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
-
-    free_benchmark_results(&b_results);
-
-    initialise_benchmark_results(&b_results, repeats);
-
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
-
-    stream_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
-
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "collective_persistent_memory_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
-
-    free_benchmark_results(&b_results);
-
-
-
-    initialise_benchmark_results(&b_results, repeats);
-
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
-
-    stream_read_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
-
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "read_persistent_memory_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
-
-    free_benchmark_results(&b_results);
-
-
-    initialise_benchmark_results(&b_results, repeats);
-
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
-
-    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, none, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
-
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "write_persistent_memory_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
-
-
-    free_benchmark_results(&b_results);
-
- 
-    initialise_benchmark_results(&b_results, repeats);
-
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
-
-    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
-
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "individual_write_persistent_memory_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
-
-    free_benchmark_results(&b_results);
-
-    initialise_benchmark_results(&b_results, repeats);
-
-    // Barrier here to ensure all processes are active and ready to start benchmarking
-    // For performance results we only really need a per node barrier to ensure all
-    // in a given node are at the same place, but this can avoid issues with multiple
-    // processes removing or adding files (as in the persistent memory benchmarks) from
-    // previous runs of the program.
-    MPI_Barrier(world_comm.comm);
-
-    stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective, cache_size, repeats);
-    collect_results(b_results, &a_results, &node_results, all_node_results,  world_comm, node_comm, root_comm, repeats);
-
-    if(world_comm.rank == ROOT){
-      print_results(a_results, node_results, world_comm, array_size, node_comm);
-      strcpy(filename, "collective_write_persistent_memory_results.dat");
-      save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
-    }
-
-    free_benchmark_results(&b_results);
-#endif
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "write_persistent_memory_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
 
+  free_benchmark_results(&b_results);
+
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+  
+  stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, individual, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results, world_comm, node_comm, root_comm, repeats);
+  
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "individual_write_persistent_memory_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
+  }
+  
+  free_benchmark_results(&b_results);
+  
+  initialise_benchmark_results(&b_results, repeats);
+  
+  // Barrier here to ensure all processes are active and ready to start benchmarking
+  // For performance results we only really need a per node barrier to ensure all
+  // in a given node are at the same place, but this can avoid issues with multiple
+  // processes removing or adding files (as in the persistent memory benchmarks) from
+  // previous runs of the program.
+  MPI_Barrier(world_comm.comm);
+  
+  stream_write_persistent_memory_task(&b_results, world_comm, node_comm, &array_size, socket, collective, cache_size, repeats, pmem_path);
+  collect_results(b_results, &a_results, &node_results, all_node_results,  world_comm, node_comm, root_comm, repeats);
+  
+  if(world_comm.rank == ROOT){
+    print_results(a_results, node_results, world_comm, array_size, node_comm);
+    strcpy(filename, "collective_write_persistent_memory_results.dat");
+    save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
+  }
+  
+  free_benchmark_results(&b_results);
+#endif
+  
   MPI_Finalize();
 
   free(all_node_results);
   free(filename);
+
+#if defined(PMEM) || defined(MEMKIND)
+  free(pmem_path);
+#endif
 
   return 0;
 

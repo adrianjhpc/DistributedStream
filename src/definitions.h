@@ -63,10 +63,10 @@ typedef enum {
 
 int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int cache_size, int repeats);
 #ifdef PMEM
-int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats);
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats);
-int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats);
-int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats);
+int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats, char *pmem_path);
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats, char *pmem_path);
+int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats, char *pmem_path);
+int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats, char *pmem_path);
 #endif
 void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm, int repeats);
 void initialise_benchmark_results(benchmark_results *b_results, int repeats);

@@ -58,7 +58,7 @@ extern int omp_get_num_threads();
 STREAM_TYPE *a, *b, *c;
 
 
-int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats){
+int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats, char *pmem_path){
 	int			quantum;
 	int			BytesPerWord;
 	int			k;
@@ -73,7 +73,7 @@ int stream_memkind_memory_task(benchmark_results *b_results, communicator world_
  	*array_size = ((cache_size*4)/node_comm.size);
         pmem_size = (long long)sizeof(STREAM_TYPE)*(*array_size+OFFSET)*8;
 
-        strcpy(filename,"/mnt/pmem_fsdax");
+        strcpy(filename,pmem_path);
         sprintf(filename+strlen(filename), "%d", socket);
         err = memkind_create_pmem(filename, pmem_size, &my_data);
 	if (err) {
