@@ -7,7 +7,7 @@ OBJPMEM  =$(SRCPMEM:.c=.pmem)
 SRCMEMKIND  = streams_memkind_memory_task.c streams_memory_task.c main_program.c utilities.c
 OBJMEMKIND  =$(SRCMEMKIND:.c=.memkind)
 
-CC     = mpiicc
+CC     = 
 
 MXMLINC=-I${HOME}/mxml/include
 MXMLLIB=-L${HOME}/mxml/lib -lmxml
