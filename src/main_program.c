@@ -18,6 +18,15 @@ int main(int argc, char **argv){
   communicator world_comm, node_comm, root_comm;
   char *filename;
   char *pmem_path;
+  time_t local_time;
+  struct tm current_time;
+  char timestamp[25];
+
+  // Get a timestamp for results filenames
+  local_time = time(NULL);
+  localtime_r(&local_time, &current_time);
+  strftime(timestamp, 25, "%Y%m%d-%H%M%S", localtime(&local_time));
+
 
   filename = (char *)malloc(sizeof(char)*MAX_FILE_NAME_LENGTH);
 
@@ -104,7 +113,7 @@ int main(int argc, char **argv){
   {
     omp_threads = omp_get_num_threads();
   }
-    sprintf(filename, "memory_results-%dx%d.dat", node_comm.size, omp_threads); 
+    sprintf(filename, "memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp); 
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
 
@@ -125,7 +134,7 @@ int main(int argc, char **argv){
   
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
-    strcpy(filename, "memkind_results.dat");
+    sprintf(filename, "memkind_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
   
@@ -148,7 +157,7 @@ int main(int argc, char **argv){
   
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
-    strcpy(filename, "persistent_memory_results.dat");
+    sprintf(filename, "persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
   
@@ -168,6 +177,7 @@ int main(int argc, char **argv){
   
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
+    sprintf(filename, "individual_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     strcpy(filename, "individual_persistent_memory_results.dat");
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
@@ -188,6 +198,7 @@ int main(int argc, char **argv){
   
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
+    sprintf(filename, "collective_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     strcpy(filename, "collective_persistent_memory_results.dat");
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
@@ -208,7 +219,7 @@ int main(int argc, char **argv){
 
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
-    strcpy(filename, "read_persistent_memory_results.dat");
+    sprintf(filename, "read_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
 
@@ -228,7 +239,7 @@ int main(int argc, char **argv){
 
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
-    strcpy(filename, "write_persistent_memory_results.dat");
+    sprintf(filename, "write_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
 
@@ -248,7 +259,7 @@ int main(int argc, char **argv){
   
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
-    strcpy(filename, "individual_write_persistent_memory_results.dat");
+    sprintf(filename, "individual_write_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
   
@@ -268,7 +279,7 @@ int main(int argc, char **argv){
   
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
-    strcpy(filename, "collective_write_persistent_memory_results.dat");
+    sprintf(filename, "collective_individual_write_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
   

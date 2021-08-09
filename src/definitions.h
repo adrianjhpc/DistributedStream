@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <time.h>
 
 #ifndef STREAM_TYPE
 #define STREAM_TYPE double
