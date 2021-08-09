@@ -21,6 +21,7 @@ int main(int argc, char **argv){
 
   filename = (char *)malloc(sizeof(char)*MAX_FILE_NAME_LENGTH);
 
+  MPI_Init(&argc, &argv);
 
   if(argc < 3){
     printf("Expecting parameters specifying the size of the last level cache and the number of times to run each benchmark to be provided at runtime.\n");
@@ -50,7 +51,6 @@ int main(int argc, char **argv){
   }
 #endif
 
-  MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &temp_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
