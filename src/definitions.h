@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 #include <time.h>
 
@@ -62,16 +63,16 @@ typedef enum {
   triad
 } benchmark_type;
 
-int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int cache_size, int repeats);
+int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, size_t *array_size, size_t cache_size, int repeats);
 #ifdef PMEM
-int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats, char *pmem_path);
-int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats, char *pmem_path);
-int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, persist_state persist_level, int cache_size, int repeats, char *pmem_path);
-int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats, char *pmem_path);
+int stream_memkind_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, size_t *array_size, int socket, size_t cache_size, int repeats, char *pmem_path);
+int stream_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, size_t *array_size, int socket, persist_state persist_level, size_t cache_size, int repeats, char *pmem_path);
+int stream_write_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, size_t *array_size, int socket, persist_state persist_level, size_t cache_size, int repeats, char *pmem_path);
+int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, size_t *array_size, int socket, size_t cache_size, int repeats, char *pmem_path);
 #endif
 void collect_results(benchmark_results result, aggregate_results *agg_result, aggregate_results *node_results, benchmark_results *all_node_results, communicator world_comm, communicator node_comm, communicator root_comm, int repeats);
 void initialise_benchmark_results(benchmark_results *b_results, int repeats);
 void free_benchmark_results(benchmark_results *b_results);
 void collect_individual_result(performance_result indivi, performance_result *result, performance_result *node_result, char *max_name, char *name, benchmark_results *all_node_results, benchmark_type benchmark, communicator world_comm, communicator node_comm, communicator root_comm, int repeats);
-void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm);
-void save_results(char *filename, benchmark_results *all_node_results, int array_size, communicator world_comm, communicator node_comm, communicator root_comm);
+void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, size_t array_size, communicator node_comm);
+void save_results(char *filename, benchmark_results *all_node_results, size_t array_size, communicator world_comm, communicator node_comm, communicator root_comm);
