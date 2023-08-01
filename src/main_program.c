@@ -3,13 +3,14 @@
 
 int main(int argc, char **argv){
 
+  int err;
   int temp_size, temp_rank;
   MPI_Comm temp_comm;
   int node_key;
-  int array_size;
+  size_t array_size;
   int socket, core;
   int omp_threads;
-  int cache_size = 0;
+  size_t cache_size = 0;
   int repeats = 0;
   benchmark_results b_results;
   aggregate_results node_results;
@@ -36,9 +37,9 @@ int main(int argc, char **argv){
     printf("Expecting parameters specifying the size of the last level cache and the number of times to run each benchmark to be provided at runtime.\n");
     exit(0);
   }else{
-    cache_size = atoi(argv[1]);
-    if(cache_size < 1){
-      printf("Expecting a numerical parameter greater than 0 for the last level cache size. Current parameter is %d.\n", cache_size);
+    err = sscanf(argv[1], "%zu", &cache_size);
+    if(err != 1 || cache_size < 1){
+      printf("Expecting a numerical parameter greater than 0 for the last level cache size. Current parameter is %ll.\n", cache_size);
       exit(0);
     }
     repeats = atoi(argv[2]);
@@ -53,6 +54,7 @@ int main(int argc, char **argv){
 #if defined(PMEM) || defined(MEMKIND)
   if(argc != 4){
     printf("As well as the parameters specifying the size of the last level of cache and the number of times to run each benchmark I am expecting a parameter specifying the path to the persistent memory to be used.\n");
+
     exit(0);
   }else{
     pmem_path = malloc(strlen(argv[0])*sizeof(char));
@@ -521,7 +523,7 @@ void free_benchmark_results(benchmark_results *b_results){
 // be called from the root process as the overall design is that
 // only the root process (the process which has ROOT rank) will
 // have this data.
-void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, int array_size, communicator node_comm){
+void print_results(aggregate_results a_results, aggregate_results node_results, communicator world_comm, size_t array_size, communicator node_comm){
 
   int omp_num_threads;
   double bandwidth_avg, bandwidth_max, bandwidth_min;
@@ -600,7 +602,7 @@ void print_results(aggregate_results a_results, aggregate_results node_results, 
 // be called from the root process as the overall design is that
 // only the root process (the process which has ROOT rank) will
 // have this data.
-void save_results(char *filename, benchmark_results *all_node_results, int array_size, communicator world_comm, communicator node_comm, communicator root_comm){
+void save_results(char *filename, benchmark_results *all_node_results, size_t array_size, communicator world_comm, communicator node_comm, communicator root_comm){
 
   FILE *fp;
   mxml_node_t *tree;

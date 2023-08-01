@@ -58,7 +58,7 @@ static int checktick();
 extern int omp_get_num_threads();
 #endif
 
-int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int socket, int cache_size, int repeats, char *pmem_path){
+int stream_read_persistent_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, size_t *array_size, int socket, size_t cache_size, int repeats, char *pmem_path){
 	char path[MAX_FILE_NAME_LENGTH];
 	char *pmemaddr = NULL;
 	int array_element_size;
@@ -148,9 +148,9 @@ int stream_read_persistent_memory_task(benchmark_results *b_results, communicato
 	}
 
 
-	a_read = pmemaddr;
-	b_read = pmemaddr + (*array_size+OFFSET)*BytesPerWord;
-	c_read = pmemaddr + (*array_size+OFFSET)*BytesPerWord*2;
+	a_read = (double *) pmemaddr;
+	b_read = (double *) (pmemaddr + (*array_size+OFFSET)*BytesPerWord);
+	c_read = (double *) (pmemaddr + (*array_size+OFFSET)*BytesPerWord*2);
 
 #pragma omp parallel for
 	for (j=0; j<*array_size; j++) {

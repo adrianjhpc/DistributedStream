@@ -56,7 +56,7 @@ extern int omp_get_num_threads();
 STREAM_TYPE	*a, *b, *c;
 
 
-int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, int *array_size, int cache_size, int repeats){
+int stream_memory_task(benchmark_results *b_results, communicator world_comm, communicator node_comm, size_t *array_size, size_t cache_size, int repeats){
 	int			quantum;
 	int			BytesPerWord;
 	int			k;
