@@ -180,7 +180,6 @@ int main(int argc, char **argv){
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
     sprintf(filename, "individual_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
-    strcpy(filename, "individual_persistent_memory_results.dat");
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
   
@@ -201,7 +200,6 @@ int main(int argc, char **argv){
   if(world_comm.rank == ROOT){
     print_results(a_results, node_results, world_comm, array_size, node_comm);
     sprintf(filename, "collective_persistent_memory_results-%dx%d-%s.dat", node_comm.size, omp_threads, timestamp);
-    strcpy(filename, "collective_persistent_memory_results.dat");
     save_results(filename, all_node_results, array_size, world_comm, node_comm, root_comm);
   }
   
