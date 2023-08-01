@@ -36,7 +36,7 @@ def plot_graphs(data_set, x, y, nodes_used, names, graph_title, experiment_name,
 
     ax.set_title(graph_title, fontsize=y*2)
     fig.tight_layout()
-    fig.savefig(experiment_name + filename, dpi=dpi_value)
+    fig.savefig(experiment_name + filename, dpi=dpi_value, bbox_inches='tight', pad_inches=0)
 
 
 # Calculate a sensible 2d grid based on a number to enable 
