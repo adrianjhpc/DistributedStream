@@ -66,6 +66,11 @@ def calculate_factors(number):
         number = number + 1
         iters = iters + 1
 
+    # If we have not found any numbers to divide to provided number then just return that 
+    # number and 1. This will result in a single row of size "number" for the 2d grid, but it is better 
+    # than failing below
+    if(dividers.size == 1):
+        return (1, number)
     # Reset number to the last value in the loop so we can use it in the test below.
     number = number - 1
     # Choose the middle values in the divisor list to give the squarest grid possible
